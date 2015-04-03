@@ -37,7 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'hdfs',
 )
 
@@ -48,6 +48,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'djangomako.middleware.MakoMiddleware',
 )
 
 ROOT_URLCONF = 'cloudbim.urls'
@@ -115,3 +117,8 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static').replace('\\', '/'),
 )
 STATIC_ROOT = os.path.join(BASE_DIR, 'collect_static').replace('\\', '/')
+
+MAKO_TEMPLATE_DIRS = (
+    os.path.join(BASE_DIR, 'hdfs/templates').replace('\\', '/'),
+    os.path.join(BASE_DIR, 'templates').replace('\\', '/'),
+)
