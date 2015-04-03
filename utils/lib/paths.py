@@ -44,6 +44,7 @@ def __get_root(*append):
     append = [ ]
   path = os.path.join(
               os.path.dirname(__file__),
+              '..','..',
               *append)
   return os.path.abspath(path)
 
@@ -62,7 +63,7 @@ def get_desktop_root(*append):
   """
   Returns the directory for Desktop.
   """
-  return __get_root("desktop", *append)
+  return __get_root("utils", *append)
 
 
 def get_apps_root(*append):

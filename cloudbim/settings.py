@@ -89,3 +89,36 @@ STATIC_URL = '/static/'
 # initial conf
 from utils.lib.paths import get_desktop_root
 _config_dir = os.getenv("CLOUDBIM_CONF_DIR", get_desktop_root("conf"))
+_desktop_conf_modules = [dict(module=utils.conf, config_key=None)]
+conf.initialize(_desktop_conf_modules, _config_dir)
+
+import utils.hadoop.conf
+import hdfs.conf
+# import hbase.conf
+_lib_conf_modules = [
+                   {
+                    "module": utils.hadoop.conf,
+                    "config_key": None
+                    },
+                    ]
+
+_app_conf_modules = [
+                     {
+                      "module": hdfs.conf,
+                      "config_key": None
+                      },
+#                      {"module": hbase.conf,
+#                       "config_key": None}
+                     ]
+conf.initialize(_lib_conf_modules, _config_dir)
+conf.initialize(_app_conf_modules, _config_dir)
+
+
+# cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-cloudbim'
+    }
+}
+
