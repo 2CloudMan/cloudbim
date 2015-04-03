@@ -50,6 +50,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'utils.middleware.ClusterMiddleware',
 )
 
 ROOT_URLCONF = 'cloudbim.urls'
@@ -62,8 +63,12 @@ WSGI_APPLICATION = 'cloudbim.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'cloudbim',
+        'USER': 'root',
+        'PASSWORD': 'lin81960868',
+        'PORT': 3306,
+        'HOST': '127.0.0.1',
     }
 }
 

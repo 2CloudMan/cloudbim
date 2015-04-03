@@ -25,7 +25,7 @@ from django.forms.formsets import formset_factory, BaseFormSet, ManagementForm
 
 from utils import i18n
 from hdfs.lib import rwx
-from hdfs.fs import normpath
+from utils.hadoop.fs import normpath
 
 
 from django.utils.translation import ugettext_lazy as _

@@ -52,9 +52,9 @@ from utils.lib.conf import coerce_bool
 from utils.lib.django_util import make_absolute, render, render_json, format_preserving_redirect
 from utils.lib.django_util import JsonResponse
 from utils.lib.exceptions_renderable import PopupException
-from hdfs.fs.hadoopfs import Hdfs
-from hdfs.fs.exceptions import WebHdfsException
-from hdfs.fs.fsutils import do_newfile_save, do_overwrite_save
+from utils.hadoop.fs.hadoopfs import Hdfs
+from utils.hadoop.fs.exceptions import WebHdfsException
+from utils.hadoop.fs.fsutils import do_newfile_save, do_overwrite_save
 
 from hdfs.conf import MAX_SNAPPY_DECOMPRESSION_SIZE
 from hdfs.lib.archives import archive_factory

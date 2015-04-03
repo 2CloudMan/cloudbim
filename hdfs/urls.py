@@ -18,7 +18,7 @@
 from django.conf.urls import url, patterns
 
 
-urlpatterns = patterns('filebrowser.views',
+urlpatterns = patterns('hdfs.views',
   # Base view
   url(r'^$', 'index', name='index'),
 
