@@ -22,8 +22,8 @@ from cStringIO import StringIO
 
 from thrift.transport.TTransport import *
 
-from desktop.lib.rest.http_client import HttpClient
-from desktop.lib.rest.resource import Resource
+from utils.lib.rest.http_client import HttpClient
+from utils.lib.rest.resource import Resource
 
 
 LOG = logging.getLogger(__name__)

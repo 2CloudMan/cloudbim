@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 import os
 import utils.conf
 from utils.lib import conf
-
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -41,6 +40,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'hbase',
     'hdfs',
+    'auth',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -127,3 +127,8 @@ CACHES = {
     }
 }
 
+
+# Desktop supports only one authentication backend.
+AUTHENTICATION_BACKENDS = (utils.conf.AUTH.BACKEND.get(),)
+if utils.conf.DEMO_ENABLED.get():
+  AUTHENTICATION_BACKENDS = ('auth.backend.DemoBackend',)

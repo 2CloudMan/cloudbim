@@ -1,0 +1,9 @@
+#!/home/linmiancheng/workplace/hue/build/env/bin/python2.7
+# EASY-INSTALL-ENTRY-SCRIPT: 'parquet==1.0','console_scripts','parquet'
+__requires__ = 'parquet==1.0'
+import sys
+from pkg_resources import load_entry_point
+
+sys.exit(
+   load_entry_point('parquet==1.0', 'console_scripts', 'parquet')()
+)

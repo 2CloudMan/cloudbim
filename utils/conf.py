@@ -478,13 +478,13 @@ AUTH = ConfigSection(
   help=_("Configuration options for user authentication into the web application."),
   members=dict(
     BACKEND=Config("backend",
-                   default="desktop.auth.backend.AllowFirstUserDjangoBackend",
+                   default="auth.backend.AllowFirstUserDjangoBackend",
                    help=_("Authentication backend.  Common settings are "
                         "django.contrib.auth.backends.ModelBackend (fully Django backend), " +
-                        "desktop.auth.backend.AllowAllBackend (allows everyone), " +
-                        "desktop.auth.backend.AllowFirstUserDjangoBackend (relies on Django and user manager, after the first login). ")),
+                        "auth.backend.AllowAllBackend (allows everyone), " +
+                        "auth.backend.AllowFirstUserDjangoBackend (relies on Django and user manager, after the first login). ")),
     USER_AUGMENTOR=Config("user_augmentor",
-                   default="desktop.auth.backend.DefaultUserAugmentor",
+                   default="auth.backend.DefaultUserAugmentor",
                    help=_("Class which defines extra accessor methods for User objects.")),
     PAM_SERVICE=Config("pam_service",
                   default="login",
@@ -923,7 +923,7 @@ def config_validator(user):
 
   Called by core check_config() view.
   """
-  from desktop.lib import i18n
+  from utils.lib import i18n
 
   res = []
   if not SECRET_KEY.get():
