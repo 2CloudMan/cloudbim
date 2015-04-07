@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 from django.conf.global_settings import TEMPLATE_LOADERS
+import utils.conf
+from utils.lib import conf
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -38,7 +41,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'admin',
+    'auth',
+    'hbase',
     'hdfs',
+
 )
 
 MIDDLEWARE_CLASSES = (
@@ -50,6 +57,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'djangomako.middleware.MakoMiddleware',
+    'utils.middleware.ClusterMiddleware',
 )
 
 ROOT_URLCONF = 'cloudbim.urls'
@@ -62,8 +70,12 @@ WSGI_APPLICATION = 'cloudbim.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'cloudbim',
+        'USER': 'root',
+        'PASSWORD': 'lin81960868',
+        'PORT': 3306,
+        'HOST': '127.0.0.1',
     }
 }
 
@@ -86,7 +98,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-
 # templates config, define how to import templates.
 TEMPLATE_LOADERS = (
                     'django.template.loader.filesystem.Loader',
@@ -104,7 +115,7 @@ TEMPLATE_DIRS = (
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
-STATIC_URL = os.path.join('static/').replace('\\', '/')
+# STATIC_URL = os.path.join('static/').replace('\\', '/')
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder'
@@ -122,3 +133,45 @@ MAKO_TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, 'hdfs/templates').replace('\\', '/'),
     os.path.join(BASE_DIR, 'templates').replace('\\', '/'),
 )
+
+# initial conf
+from utils.lib.paths import get_desktop_root
+_config_dir = os.getenv("CLOUDBIM_CONF_DIR", get_desktop_root("conf"))
+_desktop_conf_modules = [dict(module=utils.conf, config_key=None)]
+conf.initialize(_desktop_conf_modules, _config_dir)
+
+import utils.hadoop.conf
+import hdfs.conf
+# import hbase.conf
+_lib_conf_modules = [
+                   {
+                    "module": utils.hadoop.conf,
+                    "config_key": None
+                    },
+                    ]
+
+_app_conf_modules = [
+                     {
+                      "module": hdfs.conf,
+                      "config_key": None
+                      },
+#                      {"module": hbase.conf,
+#                       "config_key": None}
+                     ]
+conf.initialize(_lib_conf_modules, _config_dir)
+conf.initialize(_app_conf_modules, _config_dir)
+
+
+# cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-cloudbim'
+    }
+}
+
+
+# Desktop supports only one authentication backend.
+AUTHENTICATION_BACKENDS = (utils.conf.AUTH.BACKEND.get(),)
+if utils.conf.DEMO_ENABLED.get():
+  AUTHENTICATION_BACKENDS = ('auth.backend.DemoBackend',)
