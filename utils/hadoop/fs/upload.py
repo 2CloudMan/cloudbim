@@ -32,10 +32,10 @@ import time
 from django.core.files.uploadhandler import FileUploadHandler, StopFutureHandlers, StopUpload
 from django.utils.translation import ugettext as _
 
-import hadoop.cluster
+import utils.hadoop.cluster
 
-from hadoop.conf import UPLOAD_CHUNK_SIZE
-from hadoop.fs.exceptions import WebHdfsException
+from utils.hadoop.conf import UPLOAD_CHUNK_SIZE
+from utils.hadoop.fs.exceptions import WebHdfsException
 
 LOG = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class HDFStemporaryUploadedFile(object):
     try:
       self._fs = request.fs
     except AttributeError:
-      self._fs = hadoop.cluster.get_hdfs()
+      self._fs = utils.hadoop.cluster.get_hdfs()
 
     # Don't want to handle this upload if we don't have an HDFS
     if not self._fs:

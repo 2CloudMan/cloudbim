@@ -41,9 +41,9 @@ from utils.lib.conf import validate_port
 from utils.hadoop.api.hdfs import Namenode, Datanode
 from utils.hadoop.api.hdfs.constants import QUOTA_DONT_SET, QUOTA_RESET
 from utils.hadoop.api.common.ttypes import RequestContext, IOException
-import hadoop.conf
-from hadoop.fs import normpath, SEEK_SET, SEEK_CUR, SEEK_END
-from hadoop.fs.exceptions import PermissionDeniedException
+import utils.hadoop.conf
+from utils.hadoop.fs import normpath, SEEK_SET, SEEK_CUR, SEEK_END
+from utils.hadoop.fs.exceptions import PermissionDeniedException
 
 
 LOG = logging.getLogger(__name__)
@@ -950,7 +950,7 @@ class FileUpload(object):
       extra_confs.append("-Ddfs.block.size=%d" % block_size)
     self.subprocess_cmd = [self.fs.hadoop_bin_path,
                            "jar",
-                           hadoop.conf.SUDO_SHELL_JAR.get(),
+                           utils.hadoop.conf.SUDO_SHELL_JAR.get(),
                            self.fs.user,
                            "-Dfs.default.name=" + self.fs.uri] + \
                            extra_confs + \
@@ -959,12 +959,12 @@ class FileUpload(object):
     self.subprocess_env = i18n.make_utf8_env()
 
     if self.subprocess_env.has_key('HADOOP_CLASSPATH'):
-      self.subprocess_env['HADOOP_CLASSPATH'] += ':' + hadoop.conf.HADOOP_EXTRA_CLASSPATH_STRING.get()
+      self.subprocess_env['HADOOP_CLASSPATH'] += ':' + utils.hadoop.conf.HADOOP_EXTRA_CLASSPATH_STRING.get()
     else:
-      self.subprocess_env['HADOOP_CLASSPATH'] = hadoop.conf.HADOOP_EXTRA_CLASSPATH_STRING.get()
+      self.subprocess_env['HADOOP_CLASSPATH'] = utils.hadoop.conf.HADOOP_EXTRA_CLASSPATH_STRING.get()
 
     if hadoop.conf.HADOOP_CONF_DIR.get():
-      self.subprocess_env['HADOOP_CONF_DIR'] = hadoop.conf.HADOOP_CONF_DIR.get()
+      self.subprocess_env['HADOOP_CONF_DIR'] = utils.hadoop.conf.HADOOP_CONF_DIR.get()
 
     self.path = path
     self.putter = subprocess.Popen(self.subprocess_cmd,

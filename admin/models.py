@@ -53,10 +53,12 @@ class Project(models.Model):
     created_time = models.DateTimeField(default=timezone.now)
     roles = models.ManyToManyField(auth_models.Group)
 
+
 class GroupPermission(models.Model):
   """
   Represents the permissions a group has.
   """
+  project = models.ForeignKey('Project')
   group = models.ForeignKey(auth_models.Group)
   bim_permission = models.ForeignKey("BimFilePermission")
 
@@ -71,7 +73,7 @@ class BimFilePermission(models.Model):
   file = models.CharField(max_length=30)
   action = models.CharField(max_length=100)
   description = models.CharField(max_length=255)
-
+  project = models.ManyToManyField('Project', through=GroupPermission)
   groups = models.ManyToManyField(auth_models.Group, through=GroupPermission)
 
   def __str__(self):

@@ -22,7 +22,7 @@ Return types from WebHDFS api calls.
 import stat
 
 from django.utils.encoding import smart_str
-from hadoop.fs.hadoopfs import Hdfs, decode_fs_path
+from utils.hadoop.fs.hadoopfs import Hdfs, decode_fs_path
 
 class WebHdfsStat(object):
   """
