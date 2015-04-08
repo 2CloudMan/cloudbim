@@ -11,6 +11,7 @@ from ttypes import *
 from thrift.Thrift import TProcessor
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol, TProtocol
+import utils.hadoop.api.common.ttypes
 try:
   from thrift.protocol import fastbinary
 except:
@@ -119,7 +120,7 @@ class Processor(Iface, TProcessor):
     result = readBlock_result()
     try:
       result.success = self._handler.readBlock(args.ctx, args.block, args.offset, args.length)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("readBlock", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -149,7 +150,7 @@ class readBlock_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, block=None, offset=None, length=None,):
@@ -169,7 +170,7 @@ class readBlock_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -242,7 +243,7 @@ class readBlock_result(object):
 
   thrift_spec = (
     (0, TType.STRUCT, 'success', (BlockData, BlockData.thrift_spec), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -266,7 +267,7 @@ class readBlock_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)

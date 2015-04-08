@@ -6,6 +6,7 @@ from django.db import connection, models
 from django.contrib.auth import models as auth_models
 from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _t
+from django.utils import timezone
 
 from utils.lib.exceptions_renderable import PopupException
 from utils.hadoop import cluster
@@ -46,6 +47,11 @@ class UserProfile(models.Model):
     return self.user.groups.all()
 
 
+class Project(models.Model):
+    name = models.CharField(max_length=80, unique=True)
+    project_directory = models.CharField(editable=True, max_length=1024, null=True)
+    created_time = models.DateTimeField(default=timezone.now)
+    roles = models.ManyToManyField(auth_models.Group)
 
 class GroupPermission(models.Model):
   """

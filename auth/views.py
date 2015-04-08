@@ -135,6 +135,16 @@ def dt_login(request):
     return HttpResponseRedirect(redirect_to)
 
   request.session.set_test_cookie()
+#   from utils.lib.django_util import JsonResponse
+#   return JsonResponse({
+#     'action': urlresolvers.reverse('auth.views.dt_login'),
+# #     'form': first_user_form or auth_form,
+#     'next': redirect_to,
+#     'first_login_ever': is_first_login_ever,
+#     'login_errors': request.method == 'POST',
+#     'backend_name': backend_name,
+#     'active_directory': is_active_directory
+#   })
   return render('login.mako', request, {
     'action': urlresolvers.reverse('auth.views.dt_login'),
     'form': first_user_form or auth_form,

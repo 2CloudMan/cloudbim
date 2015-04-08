@@ -7,7 +7,7 @@
 #
 
 from thrift.Thrift import TType, TMessageType, TException, TApplicationException
-import hadoop.api.common.HadoopServiceBase
+import utils.hadoop.api.common.HadoopServiceBase
 from ttypes import *
 from thrift.Thrift import TProcessor
 from thrift.transport import TTransport
@@ -18,7 +18,7 @@ except:
   fastbinary = None
 
 
-class Iface(hadoop.api.common.HadoopServiceBase.Iface):
+class Iface(utils.hadoop.api.common.HadoopServiceBase.Iface):
   """
   Provides an interface to a Hadoop Namenode. It is basically a Thrift
   translation of org.apache.hadoop.hdfs.protocol.ClientProtocol.
@@ -313,13 +313,13 @@ class Iface(hadoop.api.common.HadoopServiceBase.Iface):
     pass
 
 
-class Client(hadoop.api.common.HadoopServiceBase.Client, Iface):
+class Client(utils.hadoop.api.common.HadoopServiceBase.Client, Iface):
   """
   Provides an interface to a Hadoop Namenode. It is basically a Thrift
   translation of org.apache.hadoop.hdfs.protocol.ClientProtocol.
   """
   def __init__(self, iprot, oprot=None):
-    hadoop.api.common.HadoopServiceBase.Client.__init__(self, iprot, oprot)
+    utils.hadoop.api.common.HadoopServiceBase.Client.__init__(self, iprot, oprot)
 
   def chmod(self, ctx, path, perms):
     """
@@ -1193,9 +1193,9 @@ class Client(hadoop.api.common.HadoopServiceBase.Client, Iface):
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getDelegationToken failed: unknown result");
 
 
-class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor):
+class Processor(utils.hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor):
   def __init__(self, handler):
-    hadoop.api.common.HadoopServiceBase.Processor.__init__(self, handler)
+    utils.hadoop.api.common.HadoopServiceBase.Processor.__init__(self, handler)
     self._processMap["chmod"] = Processor.process_chmod
     self._processMap["chown"] = Processor.process_chown
     self._processMap["df"] = Processor.process_df
@@ -1242,7 +1242,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = chmod_result()
     try:
       self._handler.chmod(args.ctx, args.path, args.perms)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("chmod", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1256,7 +1256,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = chown_result()
     try:
       self._handler.chown(args.ctx, args.path, args.owner, args.group)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("chown", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1281,7 +1281,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = enterSafeMode_result()
     try:
       self._handler.enterSafeMode(args.ctx)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("enterSafeMode", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1295,7 +1295,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = getBlocks_result()
     try:
       result.success = self._handler.getBlocks(args.ctx, args.path, args.offset, args.length)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("getBlocks", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1309,7 +1309,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = getPreferredBlockSize_result()
     try:
       result.success = self._handler.getPreferredBlockSize(args.ctx, args.path)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("getPreferredBlockSize", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1323,7 +1323,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = isInSafeMode_result()
     try:
       result.success = self._handler.isInSafeMode(args.ctx)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("isInSafeMode", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1337,7 +1337,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = leaveSafeMode_result()
     try:
       self._handler.leaveSafeMode(args.ctx)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("leaveSafeMode", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1351,7 +1351,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = ls_result()
     try:
       result.success = self._handler.ls(args.ctx, args.path)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("ls", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1365,7 +1365,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = mkdirhier_result()
     try:
       result.success = self._handler.mkdirhier(args.ctx, args.path, args.perms)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("mkdirhier", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1379,7 +1379,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = refreshNodes_result()
     try:
       self._handler.refreshNodes(args.ctx)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("refreshNodes", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1393,7 +1393,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = rename_result()
     try:
       result.success = self._handler.rename(args.ctx, args.path, args.newPath)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("rename", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1407,7 +1407,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = reportBadBlocks_result()
     try:
       self._handler.reportBadBlocks(args.ctx, args.blocks)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("reportBadBlocks", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1421,7 +1421,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = stat_result()
     try:
       result.success = self._handler.stat(args.ctx, args.path)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("stat", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1435,7 +1435,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = getContentSummary_result()
     try:
       result.success = self._handler.getContentSummary(args.ctx, args.Path)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("getContentSummary", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1449,7 +1449,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = multiGetContentSummary_result()
     try:
       result.success = self._handler.multiGetContentSummary(args.ctx, args.paths)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("multiGetContentSummary", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1463,7 +1463,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = setQuota_result()
     try:
       self._handler.setQuota(args.ctx, args.path, args.namespaceQuota, args.diskspaceQuota)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("setQuota", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1477,7 +1477,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = setReplication_result()
     try:
       result.success = self._handler.setReplication(args.ctx, args.path, args.replication)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("setReplication", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1491,7 +1491,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = unlink_result()
     try:
       result.success = self._handler.unlink(args.ctx, args.path, args.recursive)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("unlink", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1505,7 +1505,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = utime_result()
     try:
       self._handler.utime(args.ctx, args.path, args.atime, args.mtime)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("utime", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1541,7 +1541,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     result = getDelegationToken_result()
     try:
       result.success = self._handler.getDelegationToken(args.ctx, args.renewer)
-    except hadoop.api.common.ttypes.IOException, err:
+    except utils.hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("getDelegationToken", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -1570,7 +1570,7 @@ class chmod_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, perms=None,):
@@ -1589,7 +1589,7 @@ class chmod_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1651,7 +1651,7 @@ class chmod_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, err=None,):
@@ -1668,7 +1668,7 @@ class chmod_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1724,7 +1724,7 @@ class chown_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, owner=None, group=None,):
@@ -1744,7 +1744,7 @@ class chown_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1815,7 +1815,7 @@ class chown_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, err=None,):
@@ -1832,7 +1832,7 @@ class chown_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1885,7 +1885,7 @@ class df_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -1902,7 +1902,7 @@ class df_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2022,7 +2022,7 @@ class enterSafeMode_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -2039,7 +2039,7 @@ class enterSafeMode_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2083,7 +2083,7 @@ class enterSafeMode_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, err=None,):
@@ -2100,7 +2100,7 @@ class enterSafeMode_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2156,7 +2156,7 @@ class getBlocks_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, offset=None, length=None,):
@@ -2176,7 +2176,7 @@ class getBlocks_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2248,7 +2248,7 @@ class getBlocks_result(object):
 
   thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT,(Block, Block.thrift_spec)), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -2277,7 +2277,7 @@ class getBlocks_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2338,7 +2338,7 @@ class getPreferredBlockSize_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None,):
@@ -2356,7 +2356,7 @@ class getPreferredBlockSize_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2410,7 +2410,7 @@ class getPreferredBlockSize_result(object):
 
   thrift_spec = (
     (0, TType.I64, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -2433,7 +2433,7 @@ class getPreferredBlockSize_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2490,7 +2490,7 @@ class isInSafeMode_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -2507,7 +2507,7 @@ class isInSafeMode_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2552,7 +2552,7 @@ class isInSafeMode_result(object):
 
   thrift_spec = (
     (0, TType.BOOL, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -2575,7 +2575,7 @@ class isInSafeMode_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2632,7 +2632,7 @@ class leaveSafeMode_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -2649,7 +2649,7 @@ class leaveSafeMode_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2693,7 +2693,7 @@ class leaveSafeMode_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, err=None,):
@@ -2710,7 +2710,7 @@ class leaveSafeMode_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2764,7 +2764,7 @@ class ls_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None,):
@@ -2782,7 +2782,7 @@ class ls_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2836,7 +2836,7 @@ class ls_result(object):
 
   thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT,(Stat, Stat.thrift_spec)), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -2865,7 +2865,7 @@ class ls_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2927,7 +2927,7 @@ class mkdirhier_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, perms=None,):
@@ -2946,7 +2946,7 @@ class mkdirhier_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3009,7 +3009,7 @@ class mkdirhier_result(object):
 
   thrift_spec = (
     (0, TType.BOOL, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -3032,7 +3032,7 @@ class mkdirhier_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3089,7 +3089,7 @@ class refreshNodes_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -3106,7 +3106,7 @@ class refreshNodes_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3150,7 +3150,7 @@ class refreshNodes_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, err=None,):
@@ -3167,7 +3167,7 @@ class refreshNodes_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3222,7 +3222,7 @@ class rename_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, newPath=None,):
@@ -3241,7 +3241,7 @@ class rename_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3304,7 +3304,7 @@ class rename_result(object):
 
   thrift_spec = (
     (0, TType.BOOL, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -3327,7 +3327,7 @@ class rename_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3385,7 +3385,7 @@ class reportBadBlocks_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, blocks=None,):
@@ -3403,7 +3403,7 @@ class reportBadBlocks_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3465,7 +3465,7 @@ class reportBadBlocks_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, err=None,):
@@ -3482,7 +3482,7 @@ class reportBadBlocks_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3536,7 +3536,7 @@ class stat_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None,):
@@ -3554,7 +3554,7 @@ class stat_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3608,7 +3608,7 @@ class stat_result(object):
 
   thrift_spec = (
     (0, TType.STRUCT, 'success', (Stat, Stat.thrift_spec), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -3632,7 +3632,7 @@ class stat_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3690,7 +3690,7 @@ class getContentSummary_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, Path=None,):
@@ -3708,7 +3708,7 @@ class getContentSummary_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3762,7 +3762,7 @@ class getContentSummary_result(object):
 
   thrift_spec = (
     (0, TType.STRUCT, 'success', (ContentSummary, ContentSummary.thrift_spec), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -3786,7 +3786,7 @@ class getContentSummary_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3844,7 +3844,7 @@ class multiGetContentSummary_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, paths=None,):
@@ -3862,7 +3862,7 @@ class multiGetContentSummary_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3924,7 +3924,7 @@ class multiGetContentSummary_result(object):
 
   thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT,(ContentSummary, ContentSummary.thrift_spec)), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -3953,7 +3953,7 @@ class multiGetContentSummary_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4017,7 +4017,7 @@ class setQuota_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, namespaceQuota=None, diskspaceQuota=None,):
@@ -4037,7 +4037,7 @@ class setQuota_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4108,7 +4108,7 @@ class setQuota_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, err=None,):
@@ -4125,7 +4125,7 @@ class setQuota_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4180,7 +4180,7 @@ class setReplication_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, replication=None,):
@@ -4199,7 +4199,7 @@ class setReplication_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4262,7 +4262,7 @@ class setReplication_result(object):
 
   thrift_spec = (
     (0, TType.BOOL, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -4285,7 +4285,7 @@ class setReplication_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4344,7 +4344,7 @@ class unlink_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, recursive=None,):
@@ -4363,7 +4363,7 @@ class unlink_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4426,7 +4426,7 @@ class unlink_result(object):
 
   thrift_spec = (
     (0, TType.BOOL, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -4449,7 +4449,7 @@ class unlink_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4509,7 +4509,7 @@ class utime_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, path=None, atime=None, mtime=None,):
@@ -4529,7 +4529,7 @@ class utime_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4600,7 +4600,7 @@ class utime_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, err=None,):
@@ -4617,7 +4617,7 @@ class utime_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4923,7 +4923,7 @@ class getDelegationToken_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, renewer=None,):
@@ -4941,7 +4941,7 @@ class getDelegationToken_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4994,8 +4994,8 @@ class getDelegationToken_result(object):
   """
 
   thrift_spec = (
-    (0, TType.STRUCT, 'success', (hadoop.api.common.ttypes.ThriftDelegationToken, hadoop.api.common.ttypes.ThriftDelegationToken.thrift_spec), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (0, TType.STRUCT, 'success', (utils.hadoop.api.common.ttypes.ThriftDelegationToken, utils.hadoop.api.common.ttypes.ThriftDelegationToken.thrift_spec), None, ), # 0
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -5013,13 +5013,13 @@ class getDelegationToken_result(object):
         break
       if fid == 0:
         if ftype == TType.STRUCT:
-          self.success = hadoop.api.common.ttypes.ThriftDelegationToken()
+          self.success = utils.hadoop.api.common.ttypes.ThriftDelegationToken()
           self.success.read(iprot)
         else:
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
