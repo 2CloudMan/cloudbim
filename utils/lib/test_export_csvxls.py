@@ -17,7 +17,7 @@
 
 import tablib
 
-from desktop.lib.export_csvxls import create_generator, make_response
+from utils.lib.export_csvxls import create_generator, make_response
 from nose.tools import assert_equal
 
 

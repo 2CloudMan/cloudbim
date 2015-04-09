@@ -12,5 +12,5 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^hdfs/', include('hdfs.urls')),
-    url(r'^', include('auth.urls'))
+    url(r'^auth/', include('auth.urls'))
 )

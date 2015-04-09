@@ -30,8 +30,8 @@ from django.utils import formats
 from django.utils.safestring import mark_safe
 from django.utils.encoding import StrAndUnicode, force_unicode
 
-import desktop.lib.i18n
-from desktop.lib.i18n import smart_str
+import  utils.lib.i18n
+from  utils.lib.i18n import smart_str
 
 
 LOG = logging.getLogger(__name__)
@@ -229,7 +229,7 @@ class UnicodeEncodingField(ChoiceOrOtherField):
 
   def clean(self, value):
     encoding = value[0] == OTHER_VAL and value[1] or value[0]
-    if encoding and not desktop.lib.i18n.validate_encoding(encoding):
+    if encoding and not  utils.lib.i18n.validate_encoding(encoding):
       raise forms.ValidationError("'%s' encoding is not available" % (encoding,))
     return encoding
 

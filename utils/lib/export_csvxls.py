@@ -23,7 +23,7 @@ import tablib
 
 from django.http import StreamingHttpResponse
 from django.utils.encoding import smart_str
-from desktop.lib import i18n
+from utils.lib import i18n
 
 
 LOG = logging.getLogger(__name__)

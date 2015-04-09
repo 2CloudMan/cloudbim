@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from desktop.lib import apputil
+from utils.lib import apputil
 import os
 from django.template.loaders import app_directories
 import logging

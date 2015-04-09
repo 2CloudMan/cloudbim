@@ -17,7 +17,7 @@
 
 from nose.tools import *
 
-from desktop.lib.view_util import big_filesizeformat, format_time_diff, format_duration_in_millis
+from utils.lib.view_util import big_filesizeformat, format_time_diff, format_duration_in_millis
 
 import datetime
 

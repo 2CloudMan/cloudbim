@@ -25,9 +25,9 @@ import sys
 from cStringIO import StringIO
 from logging.handlers import RotatingFileHandler
 
-from desktop.lib.paths import get_desktop_root
-from desktop.log import formatter
-from desktop.log.formatter import MessageOnlyFormatter
+from utils.lib.paths import get_desktop_root
+from utils.log import formatter
+from utils.log.formatter import MessageOnlyFormatter
 
 
 DEFAULT_LOG_DIR = 'logs'
@@ -78,7 +78,7 @@ class AuditHandler(RotatingFileHandler):
 
 
 def get_audit_logger():
-  from desktop.conf import AUDIT_EVENT_LOG_DIR, AUDIT_LOG_MAX_FILE_SIZE
+  from utils.conf import AUDIT_EVENT_LOG_DIR, AUDIT_LOG_MAX_FILE_SIZE
 
   audit_logger = logging.getLogger('audit')
   if not filter(lambda hclass: isinstance(hclass, AuditHandler), audit_logger.handlers): # Don't add handler twice

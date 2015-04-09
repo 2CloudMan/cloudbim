@@ -17,17 +17,17 @@
 #
 # Django-side implementation of the JobTracker plugin interface
 
-from desktop.lib import thrift_util
-from desktop.lib.conf import validate_port
-from desktop.lib.exceptions import StructuredException
-from desktop.lib.thrift_util import fixup_enums
+from utils.lib import thrift_util
+from utils.lib.conf import validate_port
+from utils.lib.exceptions import StructuredException
+from utils.lib.thrift_util import fixup_enums
 
-from hadoop.api.jobtracker import Jobtracker
-from hadoop.api.jobtracker.ttypes import ThriftJobID, ThriftTaskAttemptID, \
+from utils.hadoop.api.jobtracker import Jobtracker
+from utils.hadoop.api.jobtracker.ttypes import ThriftJobID, ThriftTaskAttemptID, \
     ThriftTaskType, ThriftTaskPhase, ThriftTaskID, \
     ThriftTaskState, ThriftJobState, ThriftJobPriority, TaskNotFoundException, \
     JobTrackerState, JobNotFoundException, ThriftTaskQueryState
-from hadoop.api.common.ttypes import RequestContext
+from utils.hadoop.api.common.ttypes import RequestContext
 from thrift.transport import TTransport
 
 import threading

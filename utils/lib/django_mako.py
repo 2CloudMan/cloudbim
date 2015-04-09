@@ -36,9 +36,9 @@ ENCODING_ERRORS = 'replace'
 # Things to automatically import into all template namespaces
 IMPORTS=[
   "from django.utils.html import escape",
-  "from desktop.lib.django_mako import url",
-  "from desktop.lib.django_mako import csrf_token",
-  "from desktop.lib.django_mako import static",
+  "from utils.lib.django_mako import url",
+  "from utils.lib.django_mako import csrf_token",
+  "from utils.lib.django_mako import static",
 ]
 
 class DesktopLookup(TemplateCollection):

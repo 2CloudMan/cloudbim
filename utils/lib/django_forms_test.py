@@ -14,7 +14,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from desktop.lib.django_forms import DependencyAwareForm
+from utils.lib.django_forms import DependencyAwareForm
 from django import forms
 
 from nose.tools import assert_true, assert_false, assert_equal

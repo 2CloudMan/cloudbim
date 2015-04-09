@@ -24,7 +24,7 @@ import logging
 import os
 import re
 
-import desktop.conf
+import utils.conf
 import django.utils.encoding
 
 SITE_ENCODING = None
@@ -36,11 +36,11 @@ def get_site_encoding():
   """Get the default site encoding"""
   global SITE_ENCODING
   if SITE_ENCODING is None:
-    encoding = desktop.conf.DEFAULT_SITE_ENCODING.get()
+    encoding = utils.conf.DEFAULT_SITE_ENCODING.get()
     if not validate_encoding(encoding):
-      default = desktop.conf.DEFAULT_SITE_ENCODING.config.default_value
+      default = utils.conf.DEFAULT_SITE_ENCODING.config.default_value
       msg = 'Invalid HUE configuration value for %s: "%s". Using default "%s"' % \
-                  (desktop.conf.DEFAULT_SITE_ENCODING.config.key, encoding, default)
+                  (utils.conf.DEFAULT_SITE_ENCODING.config.key, encoding, default)
       logging.error(msg)
       encoding = default
     SITE_ENCODING = encoding

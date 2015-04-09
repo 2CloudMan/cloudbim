@@ -18,7 +18,7 @@
 import grp
 import os
 import pwd
-import desktop.log
+import utils.log
 
 def _change_uid_gid(uid, gid=None):
   """Try to change UID and GID to the provided values.
@@ -56,6 +56,6 @@ def drop_privileges_if_necessary(options):
   if os.geteuid() == 0 and options['server_user'] and options['server_group']:
     # ensure the that the daemon runs as specified user
     (uid, gid) = get_uid_gid(options['server_user'], options['server_group'])
-    desktop.log.chown_log_dir(uid, gid)
+    utils.log.chown_log_dir(uid, gid)
     _change_uid_gid(uid, gid)
 
