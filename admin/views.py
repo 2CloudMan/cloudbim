@@ -219,3 +219,27 @@ def _check_remove_last_super(user_obj):
   assert num_active_su >= 1, _("No active superuser configured.")
   if num_active_su == 1:
     raise PopupException(_("You cannot remove the last active superuser from the configuration."), error_code=401)
+
+
+def get_file_permission(request):
+    pass
+
+
+def add_file_permission(request):
+    pass
+
+
+def edit_file_permission(request, app=None, priv=None):
+  """
+  edit_permission(request, app = None, priv = None) -> reply
+
+  @type request:        HttpRequest
+  @param request:       The request object
+  @type app:       string
+  @param app:      Default to None, specifies the app of the privilege
+  @type priv:      string
+  @param priv      Default to None, the action of the privilege
+
+  Only superusers may modify permissions
+  """
+  pass

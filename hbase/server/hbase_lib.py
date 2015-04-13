@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Licensed to Cloudera, Inc. under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,7 +15,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+import logging
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'gen-py'))
+from thrift import Thrift
+from thrift.transport.TSocket import TSocket
+from thrift.transport.TTransport import TBufferedTransport
+from thrift.protocol import TBinaryProtocol
+
+from hbased import Hbase as thrift_hbase
+from hbased import ttypes
+
+
+LOG = logging.getLogger(__name__)
+
+
+def get_client_type():
+  return thrift_hbase.Client
+
+def get_thrift_type(name):
+  if not hasattr(ttypes,name):
+    return False
+  return getattr(ttypes,name)
+
+def get_thrift_attributes(name):
+  thrift_type = get_thrift_type(name)
+  attrs = {}
+  for spec in thrift_type.thrift_spec:
+    if spec is not None:
+      attrs[spec[2]] = spec[1]
+  return attrs

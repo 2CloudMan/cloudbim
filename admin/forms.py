@@ -27,7 +27,7 @@ from django.utils.translation import ugettext as _, ugettext_lazy as _t
 from utils import conf as desktop_conf
 from utils.lib.django_util import get_username_re_rule, get_groupname_re_rule
 
-from models import GroupPermission
+from models import GroupPermission, BimFilePermission, BimHbasePermission
 from models import get_default_user_group
 from password_policy import get_password_validators
 
@@ -264,15 +264,19 @@ class GroupEditForm(forms.ModelForm):
     super(GroupEditForm, self).__init__(*args, **kwargs)
 
     if self.instance.id:
-      self.fields['name'].widget.attrs['readonly'] = True
-      initial_members = User.objects.filter(groups=self.instance).order_by('username')
-      initial_perms = HuePermission.objects.filter(grouppermission__group=self.instance).order_by('app','description')
+        self.fields['name'].widget.attrs['readonly'] = True
+        initial_members = User.objects.filter(groups=self.instance).order_by('username')
+        # 这部分权限信息等需要的时候再处理
+        initial_fileperms = BimFilePermission.objects.filter(grouppermission__group=self.instance).order_by('file_path','description')
+        initial_hbaseperms = BimHbasePermission.objects.filter(grouppermission__group=self.instance).order_by('table','description')
     else:
-      initial_members = []
-      initial_perms = []
+        initial_members = []
+        initial_fileperms = []
+        initial_hbaseperms = []
 
     self.fields["members"] = _make_model_field(_("members"), initial_members, User.objects.order_by('username'))
-    self.fields["permissions"] = _make_model_field(_("permissions"), initial_perms, HuePermission.objects.order_by('app','description'))
+    self.fields["file_permissions"] = _make_model_field(_("file_permissions"), initial_fileperms, BimFilePermission.objects.order_by('file_path','description'))
+    self.fields["table_permissions"] = _make_model_field(_("table_permissions"), initial_hbaseperms, BimHbasePermission.objects.order_by('table','description'))
 
   def _compute_diff(self, field_name):
     current = set(self.fields[field_name].initial_objs)
@@ -295,28 +299,36 @@ class GroupEditForm(forms.ModelForm):
       user.groups.add(self.instance)
       user.save()
 
-  def _save_permissions(self):
-    delete_permission, add_permission = self._compute_diff("permissions")
+  def _save_file_permissions(self):
+    delete_permission, add_permission = self._compute_diff("file_permissions")
     for perm in delete_permission:
-      GroupPermission.objects.get(group=self.instance, hue_permission=perm).delete()
+      GroupPermission.objects.get(group=self.instance, file_perm=perm).delete()
     for perm in add_permission:
-      GroupPermission.objects.create(group=self.instance, hue_permission=perm)
+      GroupPermission.objects.create(group=self.instance, file_perm=perm)
 
 
-class PermissionsEditForm(forms.ModelForm):
+  def _save_table_permissions(self):
+    delete_permission, add_permission = self._compute_diff("table_permissions")
+    for perm in delete_permission:
+      GroupPermission.objects.get(group=self.instance, hbase_perm=perm).delete()
+    for perm in add_permission:
+      GroupPermission.objects.create(group=self.instance, hbase_perm=perm)
+
+
+class FilePermissionsEditForm(forms.ModelForm):
   """
   Form to manage the set of groups that have a particular permission.
   """
 
   class Meta:
-    model = Group
+    model = Group  # 为什么是group，这里得注意下
     fields = ()
 
   def __init__(self, *args, **kwargs):
-    super(PermissionsEditForm, self).__init__(*args, **kwargs)
+    super(FilePermissionsEditForm, self).__init__(*args, **kwargs)
 
     if self.instance.id:
-      initial_groups = Group.objects.filter(grouppermission__hue_permission=self.instance).order_by('name')
+      initial_groups = Group.objects.filter(grouppermission__file_perm=self.instance).order_by('name')
     else:
       initial_groups = []
 
@@ -335,9 +347,46 @@ class PermissionsEditForm(forms.ModelForm):
   def _save_permissions(self):
     delete_group, add_group = self._compute_diff("groups")
     for group in delete_group:
-      GroupPermission.objects.get(group=group, hue_permission=self.instance).delete()
+      GroupPermission.objects.get(group=group, file_perm=self.instance).delete()
     for group in add_group:
-      GroupPermission.objects.create(group=group, hue_permission=self.instance)
+      GroupPermission.objects.create(group=group, file_perm=self.instance)
+
+
+class TablePermissionsEditForm(forms.ModelForm):
+  """
+  Form to manage the set of groups that have a particular permission.
+  """
+
+  class Meta:
+    model = Group  # 为什么是group，这里得注意下
+    fields = ()
+
+  def __init__(self, *args, **kwargs):
+    super(FilePermissionsEditForm, self).__init__(*args, **kwargs)
+
+    if self.instance.id:
+      initial_groups = Group.objects.filter(grouppermission__hbase_perm=self.instance).order_by('name')
+    else:
+      initial_groups = []
+
+    self.fields["groups"] = _make_model_field(_("groups"), initial_groups, Group.objects.order_by('name'))
+
+  def _compute_diff(self, field_name):
+    current = set(self.fields[field_name].initial_objs)
+    updated = set(self.cleaned_data[field_name])
+    delete = current.difference(updated)
+    add = updated.difference(current)
+    return delete, add
+
+  def save(self):
+    self._save_permissions()
+
+  def _save_permissions(self):
+    delete_group, add_group = self._compute_diff("groups")
+    for group in delete_group:
+      GroupPermission.objects.get(group=group, hbase_perm=self.instance).delete()
+    for group in add_group:
+      GroupPermission.objects.create(group=group, hbase_perm=self.instance)
 
 
 def _make_model_field(label, initial, choices, multi=True):

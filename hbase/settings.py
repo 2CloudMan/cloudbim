@@ -13,8 +13,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+DJANGO_APPS = ['hbase']
+NICE_NAME = 'HBase Browser'
+MENU_INDEX = 55
+ICON = 'hbase/art/icon_hbase_48.png'
 
-import sys
-import os
+REQUIRES_HADOOP = False
+IS_URL_NAMESPACED = True
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'gen-py'))
+PERMISSION_ACTIONS = (
+  ("write", "Allow writing in the HBase app."),
+)

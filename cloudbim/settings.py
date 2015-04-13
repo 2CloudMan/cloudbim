@@ -143,6 +143,7 @@ conf.initialize(_desktop_conf_modules, _config_dir)
 
 import utils.hadoop.conf
 import hdfs.conf
+import hbase.conf
 # import hbase.conf
 _lib_conf_modules = [
                    {
@@ -156,8 +157,8 @@ _app_conf_modules = [
                       "module": hdfs.conf,
                       "config_key": None
                       },
-#                      {"module": hbase.conf,
-#                       "config_key": None}
+                    {"module": hbase.conf,
+                     "config_key": None}
                      ]
 conf.initialize(_lib_conf_modules, _config_dir)
 conf.initialize(_app_conf_modules, _config_dir)
