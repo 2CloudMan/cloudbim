@@ -7,7 +7,7 @@
 #
 
 from thrift.Thrift import TType, TMessageType, TException, TApplicationException
-import hadoop.api.common.ttypes
+import utils.hadoop.api.common.ttypes
 
 
 from thrift.transport import TTransport

@@ -1,21 +1,19 @@
 <%!
-   from _lib.staticfile_util import static
+from utils.lib.django_mako import static
 %>
 
-<html lang="zh-CN">
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="">
-        <meta name="author" content="">
+
         <link rel="icon" href="../../favicon.ico">
 
         <title>Starter Template for Bootstrap</title>
 
         <!-- Bootstrap core CSS -->
         <link href="${ static('ext/css/bootstrap.min.css') }" rel="stylesheet">
-        <link href="{{STATIC_URL}}ext/css/bootstrap.min.css" rel="stylesheet">
         <!-- Custom styles for this template -->
         <link href="${ static('css/cloudbim.css') }" rel="stylesheet">
 
@@ -33,11 +31,14 @@
 <body>
 
     <nav class="nav navbar-inverse navbar-fixed-top">
-        <div class="container">
+        <div class="container-fluid">
             <div class="navbar-header">
-                <a class="nav-brand" href="#">
-                    BIMFs
+                <a class="navbar-brand" href="#">
+                    CloudBIM
                 </a>
             </div>
+            % if user:
+            <p class="navbar-text navbar-right">Signed in as <a href="#" class="navbar-link">${user.name}</a></p>
+            % endif
         </div>
     </nav>

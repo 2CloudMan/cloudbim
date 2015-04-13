@@ -8,3 +8,4 @@
 /.settings
 /collect_static/
 /logs/*
+.idea/*

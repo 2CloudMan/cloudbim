@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'auth',
     'hbase',
     'hdfs',
+    'main',
 
 )
 
@@ -74,7 +75,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cloudbim',
         'USER': 'root',
-        'PASSWORD': 'lin81960868',
+        'PASSWORD': '123456',
         'PORT': 3306,
         'HOST': '127.0.0.1',
     }
