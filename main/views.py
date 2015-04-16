@@ -1,9 +1,18 @@
+# coding=utf-8
 from utils.lib.django_util import render
 from django.http.response import HttpResponse, HttpResponseRedirect
 
 # Create your views here.
 
-def home(request) :
+def index(request) :
+
+    return listproj_paged(request)
+
+def listproj_paged(request) :
+
+    """
+        分页显示项目列表
+    """
 
     user =  {
         'name': 'eric'
@@ -16,19 +25,22 @@ def home(request) :
     {
         'proj_name': 'lala'
     }]
-    return render('home.mako', request, {
+    return render('listproj.mako', request, {
         'user': user,
         'projects': projects
     })
 
-def showproj(request, proj_name) :
 
-    return HttpResponseRedirect('/project/' + proj_name + '/designer/')
+def showproj(request, proj_slug) :
 
-def show(request, proj_name, role_name) :
+    return HttpResponseRedirect('/project/' + proj_slug + '/designer/')
 
-    return HttpResponse(proj_name)
+def show(request, proj_slug, role_slug) :
 
-def info(request) :
+    return info(request, proj_slug, role_slug)
 
-    return
+def info(request, proj_slug, role_slug) :
+
+    return render('info.mako', request, {
+
+    })

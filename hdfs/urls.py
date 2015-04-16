@@ -20,7 +20,7 @@ from django.conf.urls import url, patterns
 
 urlpatterns = patterns('hdfs.views',
   # Base view
-  url(r'^$', 'index', name='index'),
+  #url(r'^$', 'index', name='index'),
 
   # Catch-all for viewing a file (display) or a directory (listdir)
   url(r'^view(?P<path>/.*)$', 'view', name='view'),

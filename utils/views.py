@@ -1,7 +1,7 @@
 from djangomako.shortcuts import render_to_string
 
 # Create your views here.
-def commonheader() :
+def commonheader(request) :
     return render_to_string('common_header.mako', {})
 
 

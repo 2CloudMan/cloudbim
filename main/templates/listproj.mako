@@ -2,7 +2,7 @@
 from utils.views import commonheader, commonfooter
 %>
 
-${ commonheader() | n,unicode }
+${ commonheader(request) | n,unicode }
 
 <link href="${ static('main/css/home.css') }" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="${ static('main/js/home.js') }"></script>

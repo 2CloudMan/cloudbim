@@ -3,4 +3,6 @@ $(document).ready(function(){
     $('a.list-group-item').removeClass('active');
     $(this).addClass('active')
   });
+
+  )
 });
