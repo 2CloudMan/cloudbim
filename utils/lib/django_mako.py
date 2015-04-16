@@ -39,6 +39,7 @@ IMPORTS=[
   "from utils.lib.django_mako import url",
   "from utils.lib.django_mako import csrf_token",
   "from utils.lib.django_mako import static",
+  "from django.utils.translation import ugettext as _"
 ]
 
 class DesktopLookup(TemplateCollection):

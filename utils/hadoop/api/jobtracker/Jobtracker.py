@@ -7,7 +7,7 @@
 #
 
 from thrift.Thrift import TType, TMessageType, TException, TApplicationException
-import hadoop.api.common.HadoopServiceBase
+import utils.hadoop.api.common.HadoopServiceBase
 from ttypes import *
 from thrift.Thrift import TProcessor
 from thrift.transport import TTransport
@@ -18,7 +18,7 @@ except:
   fastbinary = None
 
 
-class Iface(hadoop.api.common.HadoopServiceBase.Iface):
+class Iface(utils.hadoop.api.common.HadoopServiceBase.Iface):
   """
   A proxy service onto a Jobtracker, exposing read-only methods for cluster monitoring
   """
@@ -279,12 +279,12 @@ class Iface(hadoop.api.common.HadoopServiceBase.Iface):
     pass
 
 
-class Client(hadoop.api.common.HadoopServiceBase.Client, Iface):
+class Client(utils.hadoop.api.common.HadoopServiceBase.Client, Iface):
   """
   A proxy service onto a Jobtracker, exposing read-only methods for cluster monitoring
   """
   def __init__(self, iprot, oprot=None):
-    hadoop.api.common.HadoopServiceBase.Client.__init__(self, iprot, oprot)
+    utils.hadoop.api.common.HadoopServiceBase.Client.__init__(self, iprot, oprot)
 
   def getJobTrackerName(self, ctx):
     """
@@ -1191,9 +1191,9 @@ class Client(hadoop.api.common.HadoopServiceBase.Client, Iface):
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getDelegationToken failed: unknown result");
 
 
-class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor):
+class Processor(utils.hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor):
   def __init__(self, handler):
-    hadoop.api.common.HadoopServiceBase.Processor.__init__(self, handler)
+    utils.hadoop.api.common.HadoopServiceBase.Processor.__init__(self, handler)
     self._processMap["getJobTrackerName"] = Processor.process_getJobTrackerName
     self._processMap["getClusterStatus"] = Processor.process_getClusterStatus
     self._processMap["getQueues"] = Processor.process_getQueues
@@ -1591,7 +1591,7 @@ class getJobTrackerName_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -1608,7 +1608,7 @@ class getJobTrackerName_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1720,7 +1720,7 @@ class getClusterStatus_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -1737,7 +1737,7 @@ class getClusterStatus_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1850,7 +1850,7 @@ class getQueues_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -1867,7 +1867,7 @@ class getQueues_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1912,7 +1912,7 @@ class getQueues_result(object):
 
   thrift_spec = (
     (0, TType.STRUCT, 'success', (ThriftJobQueueList, ThriftJobQueueList.thrift_spec), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -1936,7 +1936,7 @@ class getQueues_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1994,7 +1994,7 @@ class getJob_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, jobID=None,):
@@ -2012,7 +2012,7 @@ class getJob_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2148,7 +2148,7 @@ class getRunningJobs_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -2165,7 +2165,7 @@ class getRunningJobs_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2278,7 +2278,7 @@ class getCompletedJobs_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -2295,7 +2295,7 @@ class getCompletedJobs_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2409,7 +2409,7 @@ class getRetiredJob_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, jobID=None,):
@@ -2427,7 +2427,7 @@ class getRetiredJob_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2564,7 +2564,7 @@ class getRetiredJobs_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, state=None,):
@@ -2582,7 +2582,7 @@ class getRetiredJobs_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2704,7 +2704,7 @@ class getFailedJobs_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -2721,7 +2721,7 @@ class getFailedJobs_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2834,7 +2834,7 @@ class getKilledJobs_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -2851,7 +2851,7 @@ class getKilledJobs_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2964,7 +2964,7 @@ class getAllJobs_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -2981,7 +2981,7 @@ class getAllJobs_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3086,7 +3086,7 @@ class getUserJobCounts_args(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 1
     (2, TType.STRING, 'user', None, None, ), # 2
   )
 
@@ -3105,7 +3105,7 @@ class getUserJobCounts_args(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3224,7 +3224,7 @@ class getTaskList_args(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'jobID', (ThriftJobID, ThriftJobID.thrift_spec), None, ), # 2
     (3, TType.SET, 'types', (TType.I32,None), None, ), # 3
     (4, TType.SET, 'states', (TType.I32,None), None, ), # 4
@@ -3253,7 +3253,7 @@ class getTaskList_args(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3442,7 +3442,7 @@ class getTask_args(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'taskID', (ThriftTaskID, ThriftTaskID.thrift_spec), None, ), # 2
   )
 
@@ -3461,7 +3461,7 @@ class getTask_args(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3611,7 +3611,7 @@ class getJobCounters_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, jobID=None,):
@@ -3629,7 +3629,7 @@ class getJobCounters_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3766,7 +3766,7 @@ class getJobCounterRollups_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, jobID=None,):
@@ -3784,7 +3784,7 @@ class getJobCounterRollups_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3920,7 +3920,7 @@ class getActiveTrackers_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -3937,7 +3937,7 @@ class getActiveTrackers_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4050,7 +4050,7 @@ class getBlacklistedTrackers_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -4067,7 +4067,7 @@ class getBlacklistedTrackers_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4180,7 +4180,7 @@ class getAllTrackers_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -4197,7 +4197,7 @@ class getAllTrackers_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4311,7 +4311,7 @@ class getTracker_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, name=None,):
@@ -4329,7 +4329,7 @@ class getTracker_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4464,7 +4464,7 @@ class getCurrentTime_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None,):
@@ -4481,7 +4481,7 @@ class getCurrentTime_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4594,7 +4594,7 @@ class getJobConfXML_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, jobID=None,):
@@ -4612,7 +4612,7 @@ class getJobConfXML_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4667,7 +4667,7 @@ class getJobConfXML_result(object):
 
   thrift_spec = (
     (0, TType.STRING, 'success', None, None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -4690,7 +4690,7 @@ class getJobConfXML_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4748,7 +4748,7 @@ class killJob_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, jobID=None,):
@@ -4766,7 +4766,7 @@ class killJob_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4821,7 +4821,7 @@ class killJob_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'jne', (JobNotFoundException, JobNotFoundException.thrift_spec), None, ), # 2
   )
 
@@ -4840,7 +4840,7 @@ class killJob_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4904,7 +4904,7 @@ class killTaskAttempt_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, attemptID=None,):
@@ -4922,7 +4922,7 @@ class killTaskAttempt_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -4978,7 +4978,7 @@ class killTaskAttempt_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'tne', (TaskAttemptNotFoundException, TaskAttemptNotFoundException.thrift_spec), None, ), # 2
     (3, TType.STRUCT, 'jne', (JobNotFoundException, JobNotFoundException.thrift_spec), None, ), # 3
   )
@@ -4999,7 +4999,7 @@ class killTaskAttempt_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -5074,7 +5074,7 @@ class setJobPriority_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, jobID=None, priority=None,):
@@ -5093,7 +5093,7 @@ class setJobPriority_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -5157,7 +5157,7 @@ class setJobPriority_result(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'jne', (JobNotFoundException, JobNotFoundException.thrift_spec), None, ), # 2
   )
 
@@ -5176,7 +5176,7 @@ class setJobPriority_result(object):
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)
@@ -5240,7 +5240,7 @@ class getDelegationToken_args(object):
     None, # 7
     None, # 8
     None, # 9
-    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
+    (10, TType.STRUCT, 'ctx', (utils.hadoop.api.common.ttypes.RequestContext, utils.hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
   def __init__(self, ctx=None, renewer=None,):
@@ -5258,7 +5258,7 @@ class getDelegationToken_args(object):
         break
       if fid == 10:
         if ftype == TType.STRUCT:
-          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx = utils.hadoop.api.common.ttypes.RequestContext()
           self.ctx.read(iprot)
         else:
           iprot.skip(ftype)
@@ -5311,8 +5311,8 @@ class getDelegationToken_result(object):
   """
 
   thrift_spec = (
-    (0, TType.STRUCT, 'success', (hadoop.api.common.ttypes.ThriftDelegationToken, hadoop.api.common.ttypes.ThriftDelegationToken.thrift_spec), None, ), # 0
-    (1, TType.STRUCT, 'err', (hadoop.api.common.ttypes.IOException, hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
+    (0, TType.STRUCT, 'success', (utils.hadoop.api.common.ttypes.ThriftDelegationToken, utils.hadoop.api.common.ttypes.ThriftDelegationToken.thrift_spec), None, ), # 0
+    (1, TType.STRUCT, 'err', (utils.hadoop.api.common.ttypes.IOException, utils.hadoop.api.common.ttypes.IOException.thrift_spec), None, ), # 1
   )
 
   def __init__(self, success=None, err=None,):
@@ -5330,13 +5330,13 @@ class getDelegationToken_result(object):
         break
       if fid == 0:
         if ftype == TType.STRUCT:
-          self.success = hadoop.api.common.ttypes.ThriftDelegationToken()
+          self.success = utils.hadoop.api.common.ttypes.ThriftDelegationToken()
           self.success.read(iprot)
         else:
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.err = hadoop.api.common.ttypes.IOException()
+          self.err = utils.hadoop.api.common.ttypes.IOException()
           self.err.read(iprot)
         else:
           iprot.skip(ftype)

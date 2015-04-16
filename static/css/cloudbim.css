@@ -1,0 +1,17 @@
+body {
+    padding-top:50px !important;
+}
+
+.container {
+
+}
+
+.bimCheckbox {
+    width: 15px;
+    height: 15px;
+    border: 1px solid #CCCCCC;
+    margin-top: 2px !important;
+    padding: 0 !important;
+    display: block !important;
+    cursor: default;
+}
