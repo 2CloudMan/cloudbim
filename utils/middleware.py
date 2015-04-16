@@ -31,3 +31,24 @@ class ClusterMiddleware(object):
         request.jt.setuser(request.user.username)
     else:
       request.jt = None
+
+
+class ProjectMiddleware(object):
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        if request.user.is_authenticated():
+            request.project_ref = request.REQUEST.get('project', view_kwargs.get('project'))
+            
+            if request.project_ref is None:
+                request.project = None
+                return
+            
+            try:
+                request.project = request.user.get_project(request.project_ref)
+            except Exception as e:
+                raise Exception(_('Cannot find project call "%(project_ref)s".') %
+                                {'project_ref': request.project_ref})
+                
+        else:
+            request.project = None
+        
+        

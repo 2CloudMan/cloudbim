@@ -8,6 +8,7 @@ from django.contrib.auth import models as auth_models
 from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _t
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from utils.lib.exceptions_renderable import PopupException
 from utils.hadoop import cluster
@@ -42,9 +43,46 @@ class UserProfile(models.Model):
     user = models.ForeignKey(auth_models.User, unique=True)
     home_directory = models.CharField(editable=True, max_length=1024, null=True)
     creation_method = models.CharField(editable=True, null=False, max_length=64, default=CreationMethod.HUE)
-    
+    is_usermanager = models.BooleanField(_('user manager status'), default=False,
+        help_text=_('Designates that this user has the permissions to manage all user in this system'))
+    is_rightmanager = models.BooleanField(_('user right status'), default=False,
+        help_text=_('Designates that this user has the permissions to manage right in this system '))
     def get_groups(self):
         return self.user.groups.all()
+
+    def has_hbase_permission(self, table, perm):
+        if not table or not perm:
+            return False
+        if self.user.is_superuser:
+            return True
+        if self.user.userprofile.is_rightmanager:
+            return True
+        for group in self.user.groups.all():
+            if group_has_permission(group, perm):
+                return True
+            return False
+     
+    def get_projects(self):
+        projects = set()
+        groups = self.get_groups()
+        for group in groups:
+            projects.add(group.groupprofile.project)
+        return list(projects)
+
+    def get_project(self, projectname):
+        projects = self.get_projects()
+        for project in projects:
+            if project.name is projectname:
+                return project
+        return None
+    
+    def get_user_project_roles(self, projectname):
+        groups = self.get_groups()
+        roles = set()
+        for group in groups:
+            if group.groupprofile.project.name is projectname:
+                roles.add(group.groupprofile.role)
+        return list(roles)
 
 
 class Project(models.Model):
@@ -116,6 +154,10 @@ class BimFilePermission(models.Model):
     @classmethod
     def get_object_permission(cls, path, action):
         return BimFilePermission.objects.get(file_path=path, action=action)
+
+
+def group_has_permission(group, perm):
+    return GroupPermission.objects.filter(group=group, hbase_perm__contains=perm).count() > 0
 
 
 def get_profile(user):

@@ -59,6 +59,7 @@ MIDDLEWARE_CLASSES = (
 
     'djangomako.middleware.MakoMiddleware',
     'utils.middleware.ClusterMiddleware',
+    'utils.middleware.ProjectMiddleware',
 )
 
 ROOT_URLCONF = 'cloudbim.urls'
