@@ -1,5 +1,6 @@
 # coding=utf-8
 from utils.lib.django_util import render
+from django import forms
 
 
 def view(request, proj_slug, role_slug, path):
@@ -52,3 +53,29 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
 
     return render('listdir.mako', request, data)
+
+
+def upload_file(request, proj_slug, role_slug) :
+
+    """
+    :param request:
+    :param proj_slug:
+    :param role_slug:
+    :return  json
+            成功： {code: ０}
+            失败： {code: 1, errMsg: '例如：文件以存在'}
+
+    post 方法
+    参数为dest : 目标目录路径（才角色目录为根目录）
+         file ：
+    """
+
+    if request.method == 'POST':
+        pass
+
+
+    return
+
+
+
+

@@ -24,6 +24,7 @@ from utils.lib.django_mako import static
         <script src="${ static('ext/js/jquery-2.1.1.js') }"></script>
         <script src="${ static('ext/js/bootstrap.min.js') }"></script>
         <script src="${ static('ext/js/jquery.pjax.js') }"></script>
+        <script src="${ static('ext/js/dmuploader.min.js') }"></script>
 
         <script src="${ static('js/cloudbim.js') }"></script>
 
