@@ -66,21 +66,21 @@ class UserProfile(models.Model):
         projects = set()
         groups = self.get_groups()
         for group in groups:
-            projects.add(group.groupprofile.project)
+            projects.add(get_group_profile(group).project)
         return list(projects)
 
-    def get_project(self, projectname):
+    def get_project(self, proj_slug):
         projects = self.get_projects()
         for project in projects:
-            if project.name is projectname:
+            if project.slug is proj_slug:
                 return project
         return None
     
-    def get_user_project_roles(self, projectname):
+    def get_user_project_roles(self, proj_slug):
         groups = self.get_groups()
         roles = set()
         for group in groups:
-            if group.groupprofile.project.name is projectname:
+            if group.groupprofile.project.slug is proj_slug:
                 roles.add(group.groupprofile.role)
         return list(roles)
 
@@ -95,12 +95,12 @@ class Project(models.Model):
 class Role(models.Model):
     name = models.CharField(max_length=80, unique=True)
     create_time = models.DateTimeField(default=timezone.now)
-    role_directory = models.CharField(editable=True, max_length=1024, null=True)
+    role_directory = models.CharField(editable=True, max_length=1024, null=True, blank=True)
 
 
 class GroupProfile(models.Model):
     group = models.OneToOneField(auth_models.Group)
-    role = models.ForeignKey('Role')
+    role = models.ForeignKey(Role)
     project = models.ForeignKey('Project')
 
 
@@ -109,8 +109,8 @@ class GroupPermission(models.Model):
     Represents the permissions a group has.
     """
     group = models.ForeignKey(auth_models.Group)
-    file_perm = models.ForeignKey("BimFilePermission")
-    hbase_perm = models.ForeignKey('BimHbasePermission')
+    file_perm = models.ForeignKey("BimFilePermission", blank=True)
+    hbase_perm = models.ForeignKey('BimHbasePermission', blank=True)
 
 
 class BimHbasePermission(models.Model):
@@ -122,7 +122,7 @@ class BimHbasePermission(models.Model):
     group = models.ManyToManyField(auth_models.Group, through=GroupPermission)
     table = models.CharField(max_length=255)
     action = models.CharField(max_length=255)
-    description = models.CharField(max_length=255)
+    description = models.CharField(max_length=255, blank=True)
     creator = models.ForeignKey(auth_models.User, unique=True)
     create_time = models.DateTimeField(default=timezone.now)
 
@@ -143,7 +143,7 @@ class BimFilePermission(models.Model):
     """
     file_path = models.CharField(max_length=4096)  # 使用linux最大文件路径长度
     action = models.CharField(max_length=100)
-    description = models.CharField(max_length=255)
+    description = models.CharField(max_length=255, blank=True)
     groups = models.ManyToManyField(auth_models.Group, through=GroupPermission)
     creator = models.ForeignKey(auth_models.User, unique=True)
     create_time = models.DateTimeField(default=timezone.now)
@@ -174,6 +174,34 @@ def get_profile(user):
             profile = create_profile_for_user(user)
         user._cached_userman_profile = profile
         return profile
+
+
+def get_group_profile(group):
+    """
+    Caches the profile, to avoid DB queries at every call.
+    """
+    if hasattr(group, "_cached_userman_profile"):
+        return group._cached_userman_profile
+    else:
+        # Lazily create profile.
+        try:
+            profile = GroupProfile.objects.get(group=group)
+        except GroupProfile.DoesNotExist, e:
+            profile = create_profile_for_group(group)
+        group._cached_userman_profile = profile
+        return profile
+
+
+# Create a group profile for the given group
+def create_profile_for_group(group):
+    g = GroupProfile()
+    g.group = group
+    try:
+        g.save()
+        return g
+    except Exception as e:
+        LOG.debug("Failed to automatically create group profile.", exc_info=True)
+        return None
 
 
 # Create a user profile for the given user

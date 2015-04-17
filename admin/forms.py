@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 #!/usr/bin/env python
 # Licensed to Cloudera, Inc. under one
 # or more contributor license agreements.  See the NOTICE file
@@ -25,9 +26,10 @@ from django.forms.util import ErrorList
 from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
 from utils import conf as desktop_conf
-from utils.lib.django_util import get_username_re_rule, get_groupname_re_rule
+from utils.lib.django_util import get_username_re_rule, get_groupname_re_rule,\
+        get_projectname_re_rule
 
-from models import GroupPermission, BimFilePermission, BimHbasePermission
+from models import GroupPermission, BimFilePermission, BimHbasePermission, Project
 from models import get_default_user_group
 from password_policy import get_password_validators
 
@@ -156,7 +158,7 @@ class SuperUserChangeForm(UserChangeForm):
       else:
         self.initial['groups'] = []
 
-
+    
 class AddLdapUsersForm(forms.Form):
   username_pattern = forms.CharField(
       label=_t("Username"),
@@ -242,6 +244,20 @@ class AddLdapGroupsForm(forms.Form):
     return cleaned_data
 
 
+class ProjectFrom(forms.Form):
+    PROJECTNAME = re.compile('^%s$' % get_projectname_re_rule())
+    class Meta:
+        model = Project
+        fileds = ("name", "slug")
+    def clean_name(self):
+        # Note that the superclass doesn't have a clean_name method.
+        data = self.cleaned_data["slug"]
+        if not self.PROJECTNAME.match(data):
+          raise forms.ValidationError(_("Project name may only contain letters, " +
+                                      "numbers, hyphens or underscores."))
+        return data
+    
+    
 class GroupEditForm(forms.ModelForm):
   """
   Form to manipulate a group.  This manages the group name and its membership.
@@ -412,3 +428,4 @@ class SyncLdapUsersGroupsForm(forms.Form):
     super(SyncLdapUsersGroupsForm, self).__init__(*args, **kwargs)
     if get_server_choices():
       self.fields['server'] = forms.ChoiceField(choices=get_server_choices(), required=True)
+

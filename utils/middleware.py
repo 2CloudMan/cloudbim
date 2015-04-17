@@ -4,6 +4,7 @@ Created on Apr 3, 2015
 @author: linmiancheng
 '''
 from utils.hadoop import cluster
+from django.utils.translation import ugettext, ugettext_lazy as _
 class ClusterMiddleware(object):
   """
   Manages setting request.fs and request.jt
@@ -45,8 +46,7 @@ class ProjectMiddleware(object):
             try:
                 request.project = request.user.get_project(request.project_ref)
             except Exception as e:
-                raise Exception(_('Cannot find project call "%(project_ref)s".') %
-                                {'project_ref': request.project_ref})
+                request.project = None 
                 
         else:
             request.project = None

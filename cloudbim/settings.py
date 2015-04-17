@@ -103,9 +103,9 @@ STATIC_URL = '/static/'
 
 # templates config, define how to import templates.
 TEMPLATE_LOADERS = (
-                    'django.template.loader.filesystem.Loader',
-                    'django.template.loader.app_directories.Loader',
-                    )
+    'django.template.loaders.app_directories.Loader',
+    'django.template.loaders.filesystem.Loader',
+)
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or 
