@@ -49,7 +49,9 @@ class UserProfile(models.Model):
         help_text=_('Designates that this user has the permissions to manage right in this system '))
     def get_groups(self):
         return self.user.groups.all()
-
+    def has_file_permission(self, path, perm):
+        # not write yet
+        return True
     def has_hbase_permission(self, table, perm):
         if not table or not perm:
             return False
