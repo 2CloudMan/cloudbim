@@ -47,11 +47,18 @@ class UserProfile(models.Model):
         help_text=_('Designates that this user has the permissions to manage all user in this system'))
     is_rightmanager = models.BooleanField(_('user right status'), default=False,
         help_text=_('Designates that this user has the permissions to manage right in this system '))
+    
     def get_groups(self):
         return self.user.groups.all()
+
+    def get_group(self, proj_slug, role_slug):
+        return auth_models.Group.objects.filter(groupprofile__project__slug=proj_slug,
+                                                groupprofile__role__slug=role_slug).first()
+        
     def has_file_permission(self, path, perm):
         # not write yet
         return True
+
     def has_hbase_permission(self, table, perm):
         if not table or not perm:
             return False
@@ -78,6 +85,10 @@ class UserProfile(models.Model):
                 return project
         return None
     
+    def is_project_member(self, proj_slug):
+        return Project.objects.filter(groupprofile__group__user=self.user,
+                                    slug=proj_slug).count() > 0
+
     def get_user_project_roles(self, proj_slug):
         groups = self.get_groups()
         roles = set()
@@ -98,6 +109,7 @@ class Role(models.Model):
     name = models.CharField(max_length=80, unique=True)
     create_time = models.DateTimeField(default=timezone.now)
     role_directory = models.CharField(editable=True, max_length=1024, null=True, blank=True)
+    slug = models.CharField(max_length=60, unique=True)
 
 
 class GroupProfile(models.Model):
@@ -194,10 +206,25 @@ def get_group_profile(group):
         return profile
 
 
+def get_project_dir(project):
+    if not project:
+        return None
+    if not project.project_directory:
+        project.project_directory = '/project/%s' % project.slug
+        try:
+            project.save()
+            return project.project_directory
+        except Exception as e:
+            LOG.error('Failed to automatically create project home directory', exc_info=True)
+            return None
+    return project.project_directory
+    
+
 # Create a group profile for the given group
 def create_profile_for_group(group):
     g = GroupProfile()
     g.group = group
+
     try:
         g.save()
         return g

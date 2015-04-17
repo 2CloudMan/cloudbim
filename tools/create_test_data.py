@@ -21,9 +21,9 @@ def admin_init(group_detail):
     # create projects
     proj_name = group_detail.get('project', 'default')
     role_name = group_detail.get('role', 'default')
-    project = Project(name=proj_name, project_directory='/project/cloudbim',
+    project = Project(name=proj_name, project_directory='/project/'+proj_name,
                        slug=proj_name)
-    role = Role(name=role_name)
+    role = Role(name=role_name, slug=role_name)
     
     group = auth_models.Group(name=proj_name+':'+role_name)
     project.save()
@@ -37,6 +37,7 @@ def admin_init(group_detail):
     gprofile.save()
     user.save()
 
-if __name__ == "__main__":
+
+def all_init():
     for item in DATA_STRUCT:
         admin_init(item)

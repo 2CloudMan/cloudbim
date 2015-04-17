@@ -4,6 +4,7 @@ Created on Apr 3, 2015
 @author: linmiancheng
 '''
 from utils.hadoop import cluster
+from admin.models import get_profile
 from django.utils.translation import ugettext, ugettext_lazy as _
 class ClusterMiddleware(object):
   """
@@ -34,20 +35,18 @@ class ClusterMiddleware(object):
       request.jt = None
 
 
-class ProjectMiddleware(object):
+class GroupMiddleware(object):
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if request.user.is_authenticated():
-            request.project_ref = request.REQUEST.get('project', view_kwargs.get('project'))
-            
-            if request.project_ref is None:
-                request.project = None
-                return
+        if request.user.is_authenticated() and 'proj_slug' in view_kwargs\
+                and 'role_slug' in view_kwargs:
             
             try:
-                request.project = request.user.get_project(request.project_ref)
+                request.group = get_profile(request.user).get_group(view_kwargs['proj_slug'], view_kwargs['role_slug'])
+                if not request.group:
+                    raise Exception('you are not a %s of project %s' % (view_kwargs['proj_slug'],
+                                                                        view_kwargs['role_slug']))
             except Exception as e:
-                request.project = None 
-                
+                raise Exception(e)
         else:
             request.project = None
         

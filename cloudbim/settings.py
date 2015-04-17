@@ -60,7 +60,7 @@ MIDDLEWARE_CLASSES = (
 
     'djangomako.middleware.MakoMiddleware',
     'utils.middleware.ClusterMiddleware',
-    'utils.middleware.ProjectMiddleware',
+    'utils.middleware.GroupMiddleware',
 )
 
 ROOT_URLCONF = 'cloudbim.urls'
@@ -191,4 +191,12 @@ TEMPLATE_CONTEXT_PROCESSORS = (
   'django.contrib.messages.context_processors.messages',
    # Not default
    'utils.context_processors.app_name',
+)
+
+
+# Insert our HDFS upload handler
+FILE_UPLOAD_HANDLERS = (
+  'hadoop.fs.upload.HDFSfileUploadHandler',
+  'django.core.files.uploadhandler.MemoryFileUploadHandler',
+  'django.core.files.uploadhandler.TemporaryFileUploadHandler',
 )
