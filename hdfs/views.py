@@ -3,6 +3,7 @@ from utils.lib.django_util import render
 from utils.lib.exceptions_renderable import PopupException
 from utils.hadoop.fs.hadoopfs import Hdfs
 from utils.lib import paginator
+from django import forms
 
 import posixpath
 import stat
@@ -148,3 +149,25 @@ def parse_breadcrumbs(path):
             breadcrumbs.append({'url': breadcrumb_url, 'label': breadcrumbs_parts[i]})
         i = i + 1
     return breadcrumbs
+
+def upload_file(request, proj_slug, role_slug) :
+
+    """
+    :param request:
+    :param proj_slug:
+    :param role_slug:
+    :return  json
+            成功： {code: ０}
+            失败： {code: 1, errMsg: '例如：文件以存在'}
+
+    post 方法
+    参数为dest : 目标目录路径（才角色目录为根目录）
+         file ：
+    """
+
+    if request.method == 'POST':
+        pass
+
+
+    return
+
