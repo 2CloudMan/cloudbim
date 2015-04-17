@@ -115,7 +115,6 @@ ${ commonheader(request) | n,unicode }
               </div>
               <div class="modal-footer">
               </div>
-               </form>
             </div>
           </div>
         </div>
@@ -158,7 +157,7 @@ ${ commonheader(request) | n,unicode }
         url: '',
         dataType: 'json',
         allowedTypes: '*',
-        extraData:{ 'dest' : ''}
+        extraData:{ 'dest' : ''},
         onInit: function(){
           add_log('Penguin initialized :)');
         },
