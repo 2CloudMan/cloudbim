@@ -3,9 +3,22 @@ Created on Apr 3, 2015
 
 @author: linmiancheng
 '''
+import logging
+
+from utils.lib.django_util import render, render_json
 from utils.hadoop import cluster
+from utils.lib.exceptions_renderable import PopupException
+from utils.lib.exceptions import StructuredException
+
+from utils.lib import  i18n
 from admin.models import get_profile
 from django.utils.translation import ugettext, ugettext_lazy as _
+from django.conf import settings
+
+LOG = logging.getLogger(__name__)
+
+
+MIDDLEWARE_HEADER = "X-Cloudbim-Middleware-Response"
 class ClusterMiddleware(object):
   """
   Manages setting request.fs and request.jt
@@ -50,4 +63,40 @@ class GroupMiddleware(object):
         else:
             request.project = None
         
+class ExceptionMiddleware(object):
+    """
+    If exceptions know how to render themselves, use that.
+    """
+    def process_exception(self, request, exception):
+        import traceback
+        tb = traceback.format_exc()
+        logging.info("Processing exception: %s: %s" % (i18n.smart_unicode(exception),
+                                                       i18n.smart_unicode(tb)))
         
+        if isinstance(exception, PopupException):
+            return exception.response(request)
+        
+        if isinstance(exception, StructuredException):
+            if request.ajax:
+                response = render_json(exception.response_data)
+                response[MIDDLEWARE_HEADER] = 'EXCEPTION'
+                response.status_code = getattr(exception, 'error_code', 500)
+                return response
+            else:
+                response = render("error.mako", request,
+                              dict(error=exception.response_data.get("message")))
+                response.status_code = getattr(exception, 'error_code', 500)
+                return response
+        
+        return None
+
+
+class AjaxMiddleware(object):
+  """
+  Middleware that augments request to set request.ajax
+  for either is_ajax() (looks at HTTP headers) or ?format=json
+  GET parameters.
+  """
+  def process_request(self, request):
+    request.ajax = request.is_ajax() or request.REQUEST.get("format", "") == "json"
+    return None

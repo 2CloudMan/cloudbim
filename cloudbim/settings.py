@@ -58,9 +58,12 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'djangomako.middleware.MakoMiddleware',
+    
+    'utils.middleware.AjaxMiddleware',
+    'utils.middleware.ExceptionMiddleware',
     'utils.middleware.ClusterMiddleware',
     'utils.middleware.GroupMiddleware',
+    'djangomako.middleware.MakoMiddleware',
 )
 
 ROOT_URLCONF = 'cloudbim.urls'
@@ -103,8 +106,8 @@ STATIC_URL = '/static/'
 
 # templates config, define how to import templates.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.app_directories.Loader',
     'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
 )
 
 TEMPLATE_DIRS = (
@@ -132,10 +135,10 @@ STATICFILES_DIRS = (
 )
 STATIC_ROOT = os.path.join(BASE_DIR, 'collect_static').replace('\\', '/')
 
-MAKO_TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, 'hdfs/templates').replace('\\', '/'),
-    os.path.join(BASE_DIR, 'templates').replace('\\', '/'),
-)
+# MAKO_TEMPLATE_DIRS = (
+#     os.path.join(BASE_DIR, 'hdfs/templates').replace('\\', '/'),
+#     os.path.join(BASE_DIR, 'templates').replace('\\', '/'),
+# )
 
 # initial conf
 from utils.lib.paths import get_desktop_root
@@ -160,7 +163,10 @@ _app_conf_modules = [
                       "config_key": None
                       },
                     {"module": hbase.conf,
-                     "config_key": None}
+                     "config_key": None
+                     },
+                     {"module": utils.conf,
+                      "config_key": None}
                      ]
 conf.initialize(_lib_conf_modules, _config_dir)
 conf.initialize(_app_conf_modules, _config_dir)
@@ -196,7 +202,100 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 # Insert our HDFS upload handler
 FILE_UPLOAD_HANDLERS = (
-  'hadoop.fs.upload.HDFSfileUploadHandler',
+  'utils.hadoop.fs.upload.HDFSfileUploadHandler',
   'django.core.files.uploadhandler.MemoryFileUploadHandler',
   'django.core.files.uploadhandler.TemporaryFileUploadHandler',
 )
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+        'standard': {
+            'format': '%(asctime)s [%(threadName)s:%(thread)d] '\
+                '[%(name)s:%(lineno)d] [%(levelname)s]- %(message)s'
+        },
+    },
+    'filters': {
+    },
+    'handlers': {
+        'null': {
+            'level': 'DEBUG',
+            'class': 'django.utils.log.NullHandler',
+        },
+        'console':{
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True,
+        },
+        'default': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/', 'all.log'),
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
+         'error_handler': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/', 'error.log'),
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['default', 'error_handler'],
+            'propagate': False,
+            'level': 'INFO',
+        },
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'hdfs': {
+            'handlers': ['default', 'error_handler'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'hbase': {
+            'handlers': ['default', 'error_handler'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'auth': {
+            'handlers': ['default', 'error_handler'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'utils': {
+            'handlers': ['default', 'error_handler'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'main': {
+            'handlers': ['default', 'error_handler'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'admin': {
+            'handlers': ['default', 'error_handler'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+    }
+}

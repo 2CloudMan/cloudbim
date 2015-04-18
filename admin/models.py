@@ -55,9 +55,12 @@ class UserProfile(models.Model):
         return auth_models.Group.objects.filter(groupprofile__project__slug=proj_slug,
                                                 groupprofile__role__slug=role_slug).first()
         
-    def has_file_permission(self, path, perm):
-        # not write yet
-        return True
+    def has_file_permission(self, group, path, perm):
+        # user must be a member of this group
+        if self.user not in group.user_set.all():
+            return False
+        return GroupPermission.objects.filter(group=group, file_perm__file_path=path,
+                                       file_perm__action__contains=perm).count() > 0
 
     def has_hbase_permission(self, table, perm):
         if not table or not perm:
@@ -123,8 +126,8 @@ class GroupPermission(models.Model):
     Represents the permissions a group has.
     """
     group = models.ForeignKey(auth_models.Group)
-    file_perm = models.ForeignKey("BimFilePermission", blank=True)
-    hbase_perm = models.ForeignKey('BimHbasePermission', blank=True)
+    file_perm = models.ForeignKey("BimFilePermission", blank=True, null=True)
+    hbase_perm = models.ForeignKey('BimHbasePermission', blank=True, null=True)
 
 
 class BimHbasePermission(models.Model):

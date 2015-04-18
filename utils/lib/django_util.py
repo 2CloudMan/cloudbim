@@ -49,6 +49,7 @@ MAKO = 'mako'
 USERNAME_RE_RULE = "[^-:\s][^:\s]*"
 GROUPNAME_RE_RULE = ".{,80}"
 PROJECTNAME_RE_RULE = ".{,40}"
+PERM_RE_RULE="r?w?x?"
 
 # For backward compatibility for upgrades to Hue 2.2
 class PopupException: pass
@@ -81,6 +82,9 @@ def get_groupname_re_rule():
 
 def get_projectname_re_rule():
     return PROJECTNAME_RE_RULE
+
+def get_permission_re_rule():
+    return PERM_RE_RULE
 
 def login_notrequired(func):
   """A decorator for view functions to allow access without login"""

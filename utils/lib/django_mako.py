@@ -87,6 +87,7 @@ class DesktopLookup(TemplateCollection):
       raise Exception("no app!")
 
     real_loader = self._get_loader(app)
+    
     return real_loader.get_template(uri)
 
 lookup = DesktopLookup()

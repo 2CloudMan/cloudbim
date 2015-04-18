@@ -1,13 +1,5 @@
 # coding=utf-8
-from utils.lib.django_util import render
-from utils.lib.exceptions_renderable import PopupException
-from utils.hadoop.fs.hadoopfs import Hdfs
-from utils.lib import paginator
-from django.http import HttpResponse
-from hdfs.forms import UploadFileForm
-from admin.models import get_project_dir
-from admin.views import ensure_project_directory
-
+import os
 import posixpath
 import stat
 import json
@@ -15,7 +7,18 @@ import logging
 from datetime import datetime
 from django.utils.translation import ugettext as _
 from django.http.response import HttpResponse, HttpResponseRedirect
+from django.views.decorators.http import require_http_methods
 
+from utils.lib.django_util import  format_preserving_redirect
+from utils.lib.django_util import render
+from utils.lib.exceptions_renderable import PopupException
+from utils.hadoop.fs.hadoopfs import Hdfs
+from utils.hadoop.fs.exceptions import WebHdfsException
+from utils.lib import paginator
+from django.http import HttpResponse
+from hdfs.forms import UploadFileForm, MkDirForm, RmTreeFormSet
+from admin.models import get_project_dir, get_profile
+from admin.views import ensure_project_directory
 
 Log = logging.getLogger(__name__)
 def view(request, proj_slug, role_slug, path):
@@ -64,7 +67,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
     # 判断给定的路径是否是在项目所在的目录下
     project_home = get_project_dir(request.group.groupprofile.project)
     if not path.startswith(project_home):
-        raise Exception('The given path not in the project path') 
+        raise PopupException('The given path not in the project path')
 
     # 检查项目目录是否存在，不存在就创建
     if not request.fs.isdir(project_home):
@@ -78,7 +81,9 @@ def listdir_paged(request, proj_slug, role_slug, path):
 #         raise PopupException("Not a directory: %s" % (path,))
     
     # 用户是否有查看目录的权限
-    if request.user.is_superuser or request.user.has_file_permission(path, 'r'):
+    
+    if get_profile(request.user).has_file_permission(request.group, path, 'r')\
+            or request.user.is_superuser:
         pagenum = int(request.GET.get('pagenum', 1))
         pagesize = int(request.GET.get('pagesize', 30))
         
@@ -130,7 +135,6 @@ def listdir_paged(request, proj_slug, role_slug, path):
         Log.warn("Permission deny: user %s try to open directory %s" %
                  (request.user.username, path))
         data = {'error': 'Permission deny'}
-    print data
     return render('listdir.mako', request, data)
 
 
@@ -189,7 +193,13 @@ def upload_file(request, proj_slug, role_slug) :
     参数为dest : 目标目录路径（才角色目录为根目录）
          file ：
     """
+
     response = {'status': -1, 'data': ''}
+    
+    # 登录验证
+    if not request.user.is_authenticated():
+        return HttpResponseRedirect('/auth/login')
+    
     if request.method == 'POST':
         try:
             resp = _upload_file(request)
@@ -226,6 +236,12 @@ def _upload_file(request):
         if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
             raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
 
+    
+        # 判断用户是否有权限上传文件
+        if not get_profile(request.user).has_file_permission(request.group, dest, 'w'):
+            raise PopupException(_('Permission deny: user %(user) try upload file %(name)s to destination %(dest).' 
+                                   % {'user': request.user.username, 'name': uploaded_file.name, 'dest': dest}))
+
         dest = request.fs.join(dest, uploaded_file.name)
         tmp_file = uploaded_file.get_temp_path()
         username = request.user.username
@@ -234,6 +250,9 @@ def _upload_file(request):
             # Remove tmp suffix of the file
             request.fs.do_as_user(username, request.fs.rename, tmp_file, dest)
             response['status'] = 0
+            
+            # 为文件创建权限
+            
         except IOError, ex:
             already_exists = False
             try:
@@ -255,3 +274,117 @@ def _upload_file(request):
         return response
     else:
         raise PopupException(_("Error in upload form: %s") % (form.errors,))
+
+def mkdir(request):
+    def smart_mkdir(path, name):
+        # Make sure only one directory is specified at a time.
+        # No absolute directory specification allowed.
+        if posixpath.sep in name or "#" in name:
+            raise PopupException(_("Could not name folder \"%s\": Slashes or hashes are not allowed in filenames." % name))
+        request.fs.mkdir(os.path.join(path, name))
+
+    return generic_op(MkDirForm, request, smart_mkdir, ["path", "name"], "path")
+
+
+def default_data_extractor(request):
+    return {'data': request.POST.copy()}
+
+
+def default_arg_extractor(request, form, parameter_names):
+    return [form.cleaned_data[p] for p in parameter_names]
+
+
+def default_initial_value_extractor(request, parameter_names):
+    initial_values = {}
+    for p in parameter_names:
+        val = request.GET.get(p)
+        if val:
+            initial_values[p] = val
+    return initial_values
+
+
+def generic_op(form_class, request, op, parameter_names, piggyback=None, template="fileop.mako", data_extractor=default_data_extractor, arg_extractor=default_arg_extractor, initial_value_extractor=default_initial_value_extractor, extra_params=None):
+    """
+    Generic implementation for several operations.
+
+    @param form_class form to instantiate
+    @param request incoming request, used for parameters
+    @param op callable with the filesystem operation
+    @param parameter_names list of form parameters that are extracted and then passed to op
+    @param piggyback list of form parameters whose file stats to look up after the operation
+    @param data_extractor function that extracts POST data to be used by op
+    @param arg_extractor function that extracts args from a given form or formset
+    @param initial_value_extractor function that extracts the initial values of a form or formset
+    @param extra_params dictionary of extra parameters to send to the template for rendering
+    """
+    # Use next for non-ajax requests, when available.
+    next = request.GET.get("next", request.POST.get("next", None))
+
+    ret = dict({
+        'next': next
+    })
+
+    if extra_params is not None:
+        ret['extra_params'] = extra_params
+
+    for p in parameter_names:
+        val = request.REQUEST.get(p)
+        if val:
+            ret[p] = val
+
+    if request.method == 'POST':
+        form = form_class(**data_extractor(request))
+        ret['form'] = form
+        if form.is_valid():
+            args = arg_extractor(request, form, parameter_names)
+            try:
+                op(*args)
+            except (IOError, WebHdfsException), e:
+                msg = _("Cannot perform operation.")
+                if request.user.is_superuser and not request.user == request.fs.superuser:
+                    msg += _(' Note: you are a Hue admin but not a HDFS superuser (which is "%(superuser)s").') \
+                           % {'superuser': request.fs.superuser}
+                raise PopupException(msg, detail=e)
+            if next:
+                logging.debug("Next: %s" % next)
+                # Doesn't need to be quoted: quoting is done by HttpResponseRedirect.
+                return format_preserving_redirect(request, next)
+            ret["success"] = True
+            try:
+                if piggyback:
+                    piggy_path = form.cleaned_data[piggyback]
+                    ret["result"] = _massage_stats(request, request.fs.stats(piggy_path))
+            except Exception, e:
+                # Hard to report these more naturally here.  These happen either
+                # because of a bug in the piggy-back code or because of a
+                # race condition.
+                Log.exception("Exception while processing piggyback data")
+                ret["result_error"] = True
+
+            ret['user'] = request.user
+            return render(template, request, ret)
+    else:
+        # Initial parameters may be specified with get with the default extractor
+        initial_values = initial_value_extractor(request, parameter_names)
+        formset = form_class(initial=initial_values)
+        ret['form'] = formset
+    return render(template, request, ret)
+
+
+# @require_http_methods(["POST"])
+# def rmtree(request):
+#     """
+#     delete a tree recursively
+#     if skip_trash is true move  file or directory to trash.
+#     Will create a timestamped directory underneath /user/<username>/.Trash.
+#     """
+#     recurring = []
+#     params = ["path"]
+#     def bulk_rmtree(*args, **kwargs):
+#         for arg in args:
+#             request.fs.do_as_user(request.user, request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
+#     
+#     data = {
+#             # return something
+#     }
+#     return HttpResponse(data)

@@ -151,7 +151,7 @@ class HDFSfileUploadHandler(FileUploadHandler):
 
   def receive_data_chunk(self, raw_data, start):
     if not self._activated:
-      if self.request.META.get('PATH_INFO').startswith('/filebrowser') and self.request.META.get('PATH_INFO') != '/filebrowser/upload/archive':
+      if self.request.META.get('PATH_INFO').startswith('/hdfs') and self.request.META.get('PATH_INFO') != '/hdfs/upload/archive':
         raise StopUpload()
       return raw_data
 

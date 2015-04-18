@@ -27,7 +27,7 @@ from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
 from utils import conf as desktop_conf
 from utils.lib.django_util import get_username_re_rule, get_groupname_re_rule,\
-        get_projectname_re_rule
+        get_projectname_re_rule, get_permission_re_rule
 
 from models import GroupPermission, BimFilePermission, BimHbasePermission, Project
 from models import get_default_user_group
@@ -335,7 +335,7 @@ class FilePermissionsEditForm(forms.ModelForm):
   """
   Form to manage the set of groups that have a particular permission.
   """
-
+  PERMISSION_RE_RULE = re.compile('^%s$' % get_permission_re_rule())
   class Meta:
     model = Group  # 为什么是group，这里得注意下
     fields = ()
@@ -349,6 +349,14 @@ class FilePermissionsEditForm(forms.ModelForm):
       initial_groups = []
 
     self.fields["groups"] = _make_model_field(_("groups"), initial_groups, Group.objects.order_by('name'))
+
+  def clean_action(self):
+    # Note that the superclass doesn't have a clean_name method.
+    data = self.cleaned_data["action"]
+    if not self.PERMISSION_RE_RULE.match(data):
+      raise forms.ValidationError(_("permission action may only contain letters, " +
+                                  "the rule should be  r?w?x?,"))
+    return data
 
   def _compute_diff(self, field_name):
     current = set(self.fields[field_name].initial_objs)
@@ -372,6 +380,7 @@ class TablePermissionsEditForm(forms.ModelForm):
   """
   Form to manage the set of groups that have a particular permission.
   """
+  PERMISSION_RE_RULE = re.compile('^%s$' % get_permission_re_rule())
 
   class Meta:
     model = Group  # 为什么是group，这里得注意下
@@ -386,6 +395,14 @@ class TablePermissionsEditForm(forms.ModelForm):
       initial_groups = []
 
     self.fields["groups"] = _make_model_field(_("groups"), initial_groups, Group.objects.order_by('name'))
+    
+  def clean_action(self):
+    # Note that the superclass doesn't have a clean_name method.
+    data = self.cleaned_data["action"]
+    if not self.PERMISSION_RE_RULE.match(data):
+      raise forms.ValidationError(_("permission action may only contain letters, " +
+                                  "the rule should be  r?w?x?,"))
+    return data
 
   def _compute_diff(self, field_name):
     current = set(self.fields[field_name].initial_objs)
