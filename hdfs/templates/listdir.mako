@@ -39,24 +39,14 @@ ${ commonheader(request) | n,unicode }
             </thead>
 
             <tbody>
+            % for file in files:
                 <tr>
                     <td><div class="bimCheckbox"></div></td>
-                    <td>haah.mako</td>
-                    <td>eric</td>
-                    <td>2011.12.11</td>
+                    <td>${file.get("name")}</td>
+                    <td>${file.get("role_slug")}</td>
+                    <td>${file.get("ctime")}</td>
                 </tr>
-                <tr>
-                    <td><div class="bimCheckbox"></div></td>
-                    <td>haah.mako</td>
-                    <td>eric</td>
-                    <td>2011.12.11</td>
-                </tr>
-                <tr>
-                    <td><div class="bimCheckbox"></div></td>
-                    <td>haah.mako</td>
-                    <td>eric</td>
-                    <td>2011.12.11</td>
-                </tr>
+            % endfor
             </tbody>
         </table>
 
