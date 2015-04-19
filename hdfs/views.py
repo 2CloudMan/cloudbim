@@ -223,6 +223,7 @@ def _upload_file(request):
     The uploaded file is stored in HDFS at its destination with a .tmp suffix.
     We just need to rename it to the destination path.
     """
+    
     form = UploadFileForm(request.POST, request.FILES)
     response = {'status': -1, 'data': ''}
 
@@ -234,21 +235,23 @@ def _upload_file(request):
         dest = form.cleaned_data['dest']
 
         if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
-            raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
-
+            raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' %
+                                   {'sep': posixpath.sep, 'name': uploaded_file.name}))
     
         # 判断用户是否有权限上传文件
-        if not get_profile(request.user).has_file_permission(request.group, dest, 'w'):
+        if not request.user.is_superuser and \
+                not get_profile(request.user).has_file_permission(request.group, dest, 'w'):
             raise PopupException(_('Permission deny: user %(user) try upload file %(name)s to destination %(dest).' 
                                    % {'user': request.user.username, 'name': uploaded_file.name, 'dest': dest}))
 
         dest = request.fs.join(dest, uploaded_file.name)
         tmp_file = uploaded_file.get_temp_path()
-        username = request.user.username
+#         username = request.user.username
 
         try:
             # Remove tmp suffix of the file
-            request.fs.do_as_user(username, request.fs.rename, tmp_file, dest)
+#             request.fs.do_as_user(username, request.fs.rename, tmp_file, dest)
+            request.fs.do_as_superuser(request.fs.rename, tmp_file, dest)
             response['status'] = 0
             
             # 为文件创建权限
