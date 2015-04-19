@@ -43,7 +43,7 @@ ${ commonheader(request) | n,unicode }
                 <tr>
                     <td><div class="bimCheckbox"></div></td>
                     <td>${file.get("name")}</td>
-                    <td>${file.get("role_slug")}</td>
+                    <td>${file.get("owner")}</td>
                     <td>${file.get("ctime")}</td>
                 </tr>
             % endfor

@@ -5,7 +5,8 @@ Created on Apr 16, 2015
 @author: linmiancheng
 '''
 from admin.models import Project, UserProfile, GroupProfile, GroupPermission, Role,\
-        auth_models
+        auth_models, FileInfo, BimFilePermission
+from django.db.backends.dummy.base import IntegrityError
 
 DATA_STRUCT = [
                {
@@ -14,30 +15,68 @@ DATA_STRUCT = [
                 },
                {    
                     "project": 'webform',
-                    'role': 'worker'
+                    'role': 'worker',
+                    "file_perm": [{
+                                  "path": '/project/webform/worker',
+                                  "perm": 'rwx',
+                                  },
+                                  ]
                 },
                ]
 def admin_init(group_detail):
     # create projects
     proj_name = group_detail.get('project', 'default')
     role_name = group_detail.get('role', 'default')
-    project = Project(name=proj_name, project_directory='/project/'+proj_name,
-                       slug=proj_name)
-    role = Role(name=role_name, slug=role_name)
     
-    group = auth_models.Group(name=proj_name+':'+role_name)
-    project.save()
-    role.save()
-    group.save()
+    try:
+        role = Role(name=role_name, slug=role_name)
+        role.save()
+        print 'role %s created' % role.name
+    except IntegrityError:
+        role = Role.objects.get(name=role_name)
     
-    gprofile = GroupProfile(group=group, role=role, project=project)
+    try:
+        group = auth_models.Group(name=proj_name+':'+role_name)
+        group.save()
+        print 'group %s created' % group.name
+    except IntegrityError:
+        group = auth_models.Group.objects.get(name=proj_name+':'+role_name)
+    
     user = auth_models.User.objects.filter(is_superuser=True).first()
+
+    try:
+        project = Project(name=proj_name, project_directory='/project/'+proj_name,
+                           slug=proj_name, manager=user)
+        project.save()
+        print 'project created'
+    except IntegrityError:
+        project = Project.objects.get(name=proj_name)
     
-    user.groups.add(group)
-    gprofile.save()
-    user.save()
+    try:
+        gprofile = GroupProfile(group=group, role=role, project=project)
+        user.groups.add(group)
+        gprofile.save()
+        user.save()
+    except:
+        pass
 
-
+    if 'file_perm' in group_detail:
+        for perm in group_detail.get('file_perm'):
+            print perm
+            try:
+                file_ifo = FileInfo(path=perm.get('path'), owner=user, group=group)
+                file_ifo.save()
+            except IntegrityError:
+                file_ifo = FileInfo.objects.get(path=perm.get('path'))
+            try: 
+                perm = BimFilePermission(file=file_ifo, action=perm.get('perm'), creator=user)
+                perm.groups.add(group)
+                perm.save()
+                print 'permission <%s-%s-%s>created!' % (group.name, file_ifo.path, perm.action)
+            except:
+                pass
+            
+            
 def all_init():
     for item in DATA_STRUCT:
         admin_init(item)

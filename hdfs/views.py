@@ -68,13 +68,11 @@ def listdir_paged(request, proj_slug, role_slug, path):
     
     # 判断给定的路径是否是在项目所在的目录下
     project_home = get_project_dir(request.group.groupprofile.project)
-    if not path.startswith(project_home):
-        raise PopupException('The given path not in the project path')
 
     # 检查项目目录是否存在，不存在就创建
-    if not request.fs.isdir(project_home):
-        ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
-    
+    ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
+
+    path = os.path.join(project_home, path[1:])
     # 判断给定路径是否是一个目录
     if not request.fs.isdir(path):
         Log.warn('user %s try to open a dir user the given path %s but it is not a directory!' %
@@ -149,18 +147,18 @@ def _massage_stats(request, stats):
     normalized = Hdfs.normpath(path)
     proj_slug = ''
     role_slug = ''
-#     group = stats['group']
-#     group_info =  group.split(':')
-#     if group_info != 2:
-#         return None
-#     proj_slug, role_slug = group_info
-#     
-    file = FileInfo.objects.filter(path=path)
-
+    owner = 'system'
+    try:
+        file = FileInfo.objects.get(path=path)
+        owner = file.owner.username
+    except FileInfo.DoesNotExist:
+        Log.warn("Can't find file info of File %s" % path)
+#     except Exception as e:
+#         Log.error("get file info except: path - %s" % path)
     return {
         'name': stats['name'],
         'path': '',
-        'owner': file.owner,
+        'owner': owner,
         'raw_path': normalized,
         'permission': '???',
         'human_size': filesizeformat(stats['size']),

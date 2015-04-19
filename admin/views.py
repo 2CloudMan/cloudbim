@@ -205,13 +205,13 @@ def ensure_home_directory(fs, username):
   """
   home_dir = '/user/%s' % username
   fs.do_as_user(username, fs.create_home_dir, home_dir)
-  
+
 
 def ensure_project_directory(fs, proj_slug):
     proj_dir = '/project/%s' % proj_slug
     
     # 暂时使用超级管理员
-    fs.do_as_superuser(fs.create_home_dir, proj_dir)
+    fs.do_as_superuser(fs.create_proj_dir, proj_dir)
 
 def _check_remove_last_super(user_obj):
   """Raise an error if we're removing the last superuser"""

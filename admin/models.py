@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 from django.db import models
-from enum import Enum
 import logging
 
 from django.db import transaction
@@ -39,11 +38,9 @@ class UserProfile(models.Model):
     PROPERLY
     """
     # Enum for describing the creation method of a user.
-    CreationMethod = Enum('HUE', 'EXTERNAL')
     
     user = models.ForeignKey(auth_models.User, unique=True)
     home_directory = models.CharField(editable=True, max_length=1024, null=True)
-    creation_method = models.CharField(editable=True, null=False, max_length=64, default=CreationMethod.HUE)
     is_usermanager = models.BooleanField(_('user manager status'), default=False,
         help_text=_('Designates that this user has the permissions to manage all user in this system'))
     is_rightmanager = models.BooleanField(_('user right status'), default=False,
@@ -131,12 +128,21 @@ class GroupPermission(models.Model):
     file_perm = models.ForeignKey("BimFilePermission", blank=True, null=True)
     hbase_perm = models.ForeignKey('BimHbasePermission', blank=True, null=True)
 
+    class Meta:
+        index_together = [
+            ["group", "file_perm"], ["group", "hbase_perm"]
+        ]
 
 class FileInfo(models.Model):
     path = models.CharField(max_length=255, unique=True)  # 使用linux最大文件路径长度
     owner = models.ForeignKey(auth_models.User)
     group = models.ForeignKey(auth_models.Group)
     
+    class Meta:
+        index_together = [
+            ["path"],
+        ]
+
     def __str__(self):
         return "%s.%s:%s(%d)" % (self.path, self.owner, self.group, self.pk)
 
@@ -151,19 +157,26 @@ def ensure_new_fileinfo(path, owner, group):
         file.save()
 
         # init file permission
-        perm = BimFilePermission(file=file, group=group, action='rwx', description='group of file owner')
+        perm = BimFilePermission(file=file, action='rwx',
+                                 creator=owner, description='group of file owner')
+        perm.groups.add(group)
         perm.save()
     except Exception as e:
         LOG.error("user %s of group %s: file info create failed!: %s" % (owner, group, e)) 
         transaction.rollback()
     else:
         transaction.commit()
-    
+
 
 class TableInfo(models.Model):
-    table = models.CharField(max_length=255)
+    table = models.CharField(max_length=255, unique=True)
     creator = models.ForeignKey(auth_models.User)
     group = models.ForeignKey(auth_models.Group, help_text='the role that table belong for')
+    
+    class Meta:
+        index_together = [
+            ["table"],
+        ]
 
     def __str__(self):
         return "%s:%s(%d)" % (self.table, self.creator, self.pk)
@@ -174,12 +187,18 @@ class BimHbasePermission(models.Model):
   
     For now, we only assign permissions to groups, though that may change.
     """
-    group = models.ManyToManyField(auth_models.Group, through=GroupPermission)
+    groups = models.ManyToManyField(auth_models.Group, through=GroupPermission)
     table = models.ForeignKey(TableInfo)
     action = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True)
     creator = models.ForeignKey(auth_models.User)
     create_time = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        index_together = [
+            ["table", "action"],
+        ]
+        unique_together = (("table", "action"), )
 
     def __str__(self):
         return "%s.%s:%s(%d)" % (self.table, self.action, self.description, self.pk)
@@ -203,6 +222,12 @@ class BimFilePermission(models.Model):
     creator = models.ForeignKey(auth_models.User)
     create_time = models.DateTimeField(default=timezone.now)
     
+    class Meta:
+        index_together = [
+            ["file", "action"],
+        ]
+        unique_together = (("file", "action"), )
+
     def __str__(self):
         return "%s.%s:%s(%d)" % (self.file, self.action, self.description, self.pk)
     
