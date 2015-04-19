@@ -3,6 +3,7 @@ from django.db import models
 from enum import Enum
 import logging
 
+from django.db import transaction
 from django.db import connection, models
 from django.contrib.auth import models as auth_models
 from django.core.cache import cache
@@ -59,7 +60,7 @@ class UserProfile(models.Model):
         # user must be a member of this group
         if self.user not in group.user_set.all():
             return False
-        return GroupPermission.objects.filter(group=group, file_perm__file_path=path,
+        return GroupPermission.objects.filter(group=group, file_perm__file__path=path,
                                        file_perm__action__contains=perm).count() > 0
 
     def has_hbase_permission(self, table, perm):
@@ -70,7 +71,7 @@ class UserProfile(models.Model):
         if self.user.userprofile.is_rightmanager:
             return True
         for group in self.user.groups.all():
-            if group_has_permission(group, perm):
+            if group_has_table_permission(group, table, perm):
                 return True
             return False
      
@@ -105,6 +106,7 @@ class Project(models.Model):
     name = models.CharField(max_length=80, unique=True)
     project_directory = models.CharField(editable=True, max_length=1024, null=True)
     created_time = models.DateTimeField(default=timezone.now)
+    manager = models.ForeignKey(auth_models.User)
     slug = models.CharField(max_length=60, unique=True)
 
 
@@ -130,6 +132,42 @@ class GroupPermission(models.Model):
     hbase_perm = models.ForeignKey('BimHbasePermission', blank=True, null=True)
 
 
+class FileInfo(models.Model):
+    path = models.CharField(max_length=255, unique=True)  # 使用linux最大文件路径长度
+    owner = models.ForeignKey(auth_models.User)
+    group = models.ForeignKey(auth_models.Group)
+    
+    def __str__(self):
+        return "%s.%s:%s(%d)" % (self.path, self.owner, self.group, self.pk)
+
+
+@transaction.commit_manually
+def ensure_new_fileinfo(path, owner, group):
+    if FileInfo.objects.filter(path=path).count() > 0:
+        return
+    try:
+        # create file info
+        file = FileInfo(path=path, owner=owner, group=group)
+        file.save()
+
+        # init file permission
+        perm = BimFilePermission(file=file, group=group, action='rwx', description='group of file owner')
+        perm.save()
+    except Exception as e:
+        LOG.error("user %s of group %s: file info create failed!: %s" % (owner, group, e)) 
+        transaction.rollback()
+    else:
+        transaction.commit()
+    
+
+class TableInfo(models.Model):
+    table = models.CharField(max_length=255)
+    creator = models.ForeignKey(auth_models.User)
+    group = models.ForeignKey(auth_models.Group, help_text='the role that table belong for')
+
+    def __str__(self):
+        return "%s:%s(%d)" % (self.table, self.creator, self.pk)
+
 class BimHbasePermission(models.Model):
     """
     Set of  permissions that a hdfs file supports.
@@ -137,14 +175,14 @@ class BimHbasePermission(models.Model):
     For now, we only assign permissions to groups, though that may change.
     """
     group = models.ManyToManyField(auth_models.Group, through=GroupPermission)
-    table = models.CharField(max_length=255)
+    table = models.ForeignKey(TableInfo)
     action = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True)
-    creator = models.ForeignKey(auth_models.User, unique=True)
+    creator = models.ForeignKey(auth_models.User)
     create_time = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return "%s.%s:%s(%d)" % (self.file_path, self.action, self.description, self.pk)
+        return "%s.%s:%s(%d)" % (self.table, self.action, self.description, self.pk)
     
     @classmethod
     def get_object_permission(cls, table, action):
@@ -158,23 +196,27 @@ class BimFilePermission(models.Model):
     
     For now, we only assign permissions to groups, though that may change.
     """
-    file_path = models.CharField(max_length=4096)  # 使用linux最大文件路径长度
+    file = models.ForeignKey(FileInfo)  # 使用linux最大文件路径长度
     action = models.CharField(max_length=100)
     description = models.CharField(max_length=255, blank=True)
     groups = models.ManyToManyField(auth_models.Group, through=GroupPermission)
-    creator = models.ForeignKey(auth_models.User, unique=True)
+    creator = models.ForeignKey(auth_models.User)
     create_time = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        return "%s.%s:%s(%d)" % (self.file_path, self.action, self.description, self.pk)
+        return "%s.%s:%s(%d)" % (self.file, self.action, self.description, self.pk)
     
     @classmethod
     def get_object_permission(cls, path, action):
-        return BimFilePermission.objects.get(file_path=path, action=action)
+        return BimFilePermission.objects.get(file__path=path, action=action)
 
 
-def group_has_permission(group, perm):
-    return GroupPermission.objects.filter(group=group, hbase_perm__contains=perm).count() > 0
+
+    
+    
+def group_has_table_permission(group, table, perm):
+    return GroupPermission.objects.filter(group=group, hbase_perm__table__table=table,
+                                           hbase_perm__contains=perm).count() > 0
 
 
 def get_profile(user):

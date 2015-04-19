@@ -283,7 +283,7 @@ class GroupEditForm(forms.ModelForm):
         self.fields['name'].widget.attrs['readonly'] = True
         initial_members = User.objects.filter(groups=self.instance).order_by('username')
         # 这部分权限信息等需要的时候再处理
-        initial_fileperms = BimFilePermission.objects.filter(grouppermission__group=self.instance).order_by('file_path','description')
+        initial_fileperms = BimFilePermission.objects.filter(grouppermission__group=self.instance).order_by('file','description')
         initial_hbaseperms = BimHbasePermission.objects.filter(grouppermission__group=self.instance).order_by('table','description')
     else:
         initial_members = []
@@ -291,7 +291,7 @@ class GroupEditForm(forms.ModelForm):
         initial_hbaseperms = []
 
     self.fields["members"] = _make_model_field(_("members"), initial_members, User.objects.order_by('username'))
-    self.fields["file_permissions"] = _make_model_field(_("file_permissions"), initial_fileperms, BimFilePermission.objects.order_by('file_path','description'))
+    self.fields["file_permissions"] = _make_model_field(_("file_permissions"), initial_fileperms, BimFilePermission.objects.order_by('file','description'))
     self.fields["table_permissions"] = _make_model_field(_("table_permissions"), initial_hbaseperms, BimHbasePermission.objects.order_by('table','description'))
 
   def _compute_diff(self, field_name):
