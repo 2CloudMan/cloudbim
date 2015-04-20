@@ -72,7 +72,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
     # 检查项目目录是否存在，不存在就创建
     ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
-
+    print path
     path = os.path.join(project_home, path[1:])
     # 判断给定路径是否是一个目录
     if not request.fs.isdir(path):
@@ -87,6 +87,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
         pagesize = int(request.GET.get('pagesize', 30))
         
         breadcrumbs = parse_breadcrumbs(path)
+        print path
         dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, path)
     # Filter
     # 排序
@@ -249,8 +250,18 @@ def _upload_file(request):
       raise PopupException(request.META.get('upload_failed'))
 
     if form.is_valid():
-        uploaded_file = request.FILES['hdfs_file']
+        uploaded_file = request.FILES['file']
         dest = form.cleaned_data['dest']
+
+        # 判断给定的路径是否是在项目所在的目录下
+        project_home = get_project_dir(request.group.groupprofile.project)
+    
+        # 检查项目目录是否存在，不存在就创建
+        ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
+    
+        dest = os.path.join(project_home, dest[1:])       
+        print dest
+
 
         if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
             raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' %
