@@ -12,7 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from utils.lib.exceptions_renderable import PopupException
 from utils.hadoop import cluster
-from utils.models import SAMPLE_USERNAME
+
 import conf
 
 # Create your models here.

@@ -82,7 +82,7 @@ def get_backend_name():
 
 @login_notrequired
 def dt_login(request):
-  redirect_to = request.REQUEST.get('next', '/')
+  redirect_to = request.REQUEST.get('next', '/project')
   is_first_login_ever = first_login_ever()
   backend_name = get_backend_name()
   is_active_directory = backend_name == 'LdapBackend' and ( bool(LDAP.NT_DOMAIN.get()) or bool(LDAP.LDAP_SERVERS.get()) )

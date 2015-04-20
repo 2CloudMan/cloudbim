@@ -25,6 +25,8 @@ from utils.lib.django_mako import static
         <script src="${ static('ext/js/bootstrap.min.js') }"></script>
         <script src="${ static('ext/js/jquery.pjax.js') }"></script>
         <script src="${ static('ext/js/dmuploader.min.js') }"></script>
+        <script src="${ static('ext/js/knockout-min.js')}" type='text/javascript'></script>
+        <script src="${ static('ext/js/knockout.mapping-2.3.2.js')}" type='text/javascript'></script>
 
         <script src="${ static('js/cloudbim.js') }"></script>
 

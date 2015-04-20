@@ -21,16 +21,16 @@ ${ commonheader(request) | n,unicode }
                 </ol>
             </div>
 
-            <div class="col-lg-1">
-                <button class="btn btn-default" data-toggle="modal" data-target="#uploadFileModal">+</button>
-            </div>
+            <button class="btn btn-default" data-toggle="modal" data-target="#uploadFileModal">+f</button>
+            <button class="btn btn-default" data-toggle="modal" data-target="#createDirModal">+d</button>
+
         </div>
 
         <table class="table table-striped">
             <thead>
                 <tr>
                     <td width="1%">
-                    <div class="bimCheckbox"></div>
+                    <span class="bimCheckbox" data-bind="click: selectAll, css: {'glyphicon glyphicon-ok' : allSelected}"><span>
                     </td>
                     <td><strong>Name</strong></td>
                     <td><strong>Owner</strong></td>
@@ -38,43 +38,50 @@ ${ commonheader(request) | n,unicode }
                 </tr>
             </thead>
 
-            <tbody>
-            % for file in files:
-                <tr>
-                    <td><div class="bimCheckbox"></div></td>
-                    <td>${file.get("name")}</td>
-                    <td>${file.get("role_slug")}</td>
-                    <td>${file.get("ctime")}</td>
-                </tr>
-            % endfor
-            </tbody>
+            <tbody id="files" data-bind="template: {name: 'fileTemplate', foreach: files}"></tbody>
         </table>
 
 
         <div class="pull-left" style="margin:20px 0;">
-            <button type="button" class="btn btn-primary">Download</button>
-            <button type="button" class="btn btn-danger">Delete</button>
+            <button type="button" class="btn btn-primary" data-bind="enable : selectedFiles().length = 0">Download</button>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-bind="enable : selectedFiles().length > 0">Delete</button>
         </div>
 
+
+        <div>
             <nav>
               <ul class="pagination pull-right">
-                <li>
+                <li data-bind="css: { 'disabled': (page().number === page().start_index || page().num_pages <= 1)>
+                  <a href="#" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                  </a>
+                </li>
+                <li data-bind="css: { 'disabled': (page().number === page().start_index || page().num_pages <= 1)>
                   <a href="#" aria-label="Previous">
                     <span aria-hidden="true">&laquo;</span>
                   </a>
                 </li>
-                <li><a href="#">1</a></li>
-                <li><a href="#">2</a></li>
-                <li><a href="#">3</a></li>
-                <li><a href="#">4</a></li>
-                <li><a href="#">5</a></li>
-                <li>
+                <li data-bind="css: { 'disabled': (page().number === page().last_index || page().num_pages <= 1)>
                   <a href="#" aria-label="Next">
                     <span aria-hidden="true">&raquo;</span>
                   </a>
                 </li>
+                <li data-bind="css: { 'disabled': (page().number === page().last_index || page().num_pages <= 1)>
+                  <a href="#" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                  </a>
+                </li>
               </ul>
             </nav>
+
+            <div class="form-inline pagination-input-form inline pull-right" style="margin: 25px 10px;">
+              <span>${_('Page')}</span>
+              <input type="text" style="width: 40px" data-bind="value: page().number, valueUpdate: 'afterkeydown', event: { change: skipTo }" class="pagination-input" />
+              <input type="hidden" id="current_page" data-bind="value: page().number" />
+              of <span data-bind="text: page().num_pages"></span>
+            </div>
+        </div>
+
 
         <!-- 上传模块 -->
         <div class="modal fade" id="uploadFileModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -108,6 +115,55 @@ ${ commonheader(request) | n,unicode }
             </div>
           </div>
         </div>
+
+        <!-- 新建目录模块 -->
+        <div class="modal fade" id="createDirModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">创建目录</h4>
+              </div>
+
+              <div class="modal-body">
+
+              <form action="">
+                <label for="dirName">目录名</label>
+                <input type="text" class="form-control" id="dirName" placeholder="">
+                <button type="submit" class="btn btn-default" style="margin-top: 10px">submit</button>
+              </form>
+
+              </div>
+              <div class="modal-footer">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 删除模块 -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">确定删除这些文件吗?</h4>
+              </div>
+
+              <div class="modal-body">
+
+              <form id="deleteForm" action="">
+                <button type="cancel" class="btn btn-default" style="margin-top: 10px">取消</button>
+                <button type="submit" class="btn btn-default btn-danger" style="margin-top: 10px">确定</button>
+              </form>
+
+              </div>
+              <div class="modal-footer">
+              </div>
+            </div>
+          </div>
+        </div>
+
+
 
     <script type="text/javascript">
 
@@ -196,4 +252,207 @@ ${ commonheader(request) | n,unicode }
       });
     </script>
 
+     <script id="fileTemplate" type="text/html">
+        <tr>
+            <td data-bind="click: handleSelect">
+                <span class="bimCheckbox" data-bind="click: select, css: {'glyphicon glyphicon-ok' : selected}"></span>
+            </td>
+        </tr>
+    </script>
+
+
+    <script type="text/javascript">
+
+      var File = function(file) {
+
+        return {
+
+            name: file.name,
+            path: file.path,
+            raw_path: file.raw_path,
+            isdir: file.isdir,
+            human_size: file.human_size,
+            project: file.project,
+            role:  file.role,
+            ctime: file.ctime,
+            atime: file.atime,
+            selected: ko.observable(false),
+            handleSelect: function (row, e) {
+              e.preventDefault();
+              e.stopPropagation();
+              this.selected(! this.selected());
+              viewModel.allSelected(false);
+            }
+        };
+      }
+
+      var Breadcrumb = function(breadcrumb) {
+        return {
+            url: breadcrumb.url,
+            label: breadcrumb.label
+        }
+      }
+
+      var Page = function (page) {
+          if (page != null) {
+            return {
+              number: page.number,
+              num_pages: page.num_pages,
+              previous_page_number: page.previous_page_number,
+              next_page_number: page.next_page_number,
+              start_index: page.start_index,
+              end_index: page.end_index,
+              total_count: page.total_count
+            }
+          }
+          return {
+          }
+      };
+
+      var FileBrowserModel = function(files, page, breadcrumbs, currentDirPath) {
+
+        console.log('set up ko');
+        var self = this;
+
+        self.page = ko.observable(new Page(page));
+        self.recordsPerPage = ko.observable(30);
+        self.targetPageNum = ko.observable(1);
+        //self.targetPath =
+
+        self.files = ko.observableArray(ko.utils.arrayMap(files, function(file){
+            new File(file);
+        }));
+
+        self.isLoading = ko.observable(false);
+        self.allSelected = ko.observable(false);
+        self.selectedFiles = ko.computed(function () {
+            return ko.utils.arrayFilter(self.files(), function (file) {
+              return file.selected();
+            });
+        }, self);
+
+        self.selectAll = function() {
+
+            console.log('selectAll');
+            self.allSelected(! self.allSelected());
+
+            ko.utils.arrayForEach(self.files(), function (file) {
+                if (file.name != "." && file.name != "..") {
+
+                }
+
+                file.selected(self.allSelected());
+            });
+            return true;
+        }
+
+
+        self.updateFileList = function (files, page, breadcrumbs, currentDirPath, isSentryManaged) {
+            //$(".tooltip").hide();
+
+            //self.isCurrentDirSentryManaged(isSentryManaged);
+
+            self.page(new Page(page));
+
+            self.files(ko.utils.arrayMap(files, function (file) {
+              return new File(file);
+            }));
+            //if (self.sortBy() == "name"){
+            //  self.files.sort(self.fileNameSorting);
+            //}
+
+            self.breadcrumbs(ko.utils.arrayMap(breadcrumbs, function (breadcrumb) {
+              return new Breadcrumb(breadcrumb);
+            }));
+
+            self.currentPath(currentDirPath);
+
+            //$('.uploader').trigger('fb:updatePath', {dest:self.currentPath()});
+
+            self.isLoading(false);
+
+            //$("*[rel='tooltip']").tooltip({ placement:"left" });
+
+            $(window).scrollTop(0);
+
+            //resetActionbar();
+        };
+
+        self.retrieveData = function () {
+            self.isLoading(true);
+
+            $.getJSON(self.targetPath() + "?pagesize=" + self.recordsPerPage() + "&pagenum=" + self.targetPageNum() + "&filter=" + self.searchQuery() + "&sortby=" + self.sortBy() + "&descending=" + self.sortDescending() + "&format=json", function (data) {
+              if (data.error){
+                $(document).trigger("error", data.error);
+                self.isLoading(false);
+                return false;
+              }
+
+              if (data.type != null && data.type == "file") {
+                location.href = data.url;
+                return false;
+              }
+
+              self.updateFileList(data.files, data.page, data.breadcrumbs, data.current_dir_path, data.is_sentry_managed);
+
+              if ($("#hueBreadcrumbText").is(":visible")) {
+                $(".hueBreadcrumb").show();
+                $("#hueBreadcrumbText").hide();
+                $("#editBreadcrumb").show();
+              }
+            });
+        };
+
+        self.skipTo = function() {
+            console.log('skipTo');
+        };
+
+        self.deleteSelected = function () {
+           var paths = [];
+
+            $(self.selectedFiles()).each(function (index, file) {
+              paths.push(file.path);
+            });
+
+            hiddenFields($("#deleteForm"), 'path', paths);
+
+            $("#deleteForm").attr("action", "/filebrowser/rmtree" + "?" +
+              "next=/");
+
+            $("#deleteModal").modal({
+              keyboard:true,
+              show:true
+            });
+        };
+
+        // Place all values into hidden fields under parent element.
+        // Looks for managed hidden fields and handles sizing appropriately.
+        var hiddenFields = function (parentEl, name, values) {
+            parentEl = $(parentEl);
+            parentEl.find("input.hidden-field").remove();
+
+            $(values).each(function (index, value) {
+            var field = $("<input type='hidden' />");
+            field.attr("name", name);
+            field.attr("class", "hidden-field")
+            field.val(value);
+            parentEl.append(field);
+            });
+        };
+
+
+      }
+
+      var viewModel = new FileBrowserModel([], null, [], "/");
+      ko.applyBindings(viewModel);
+
+
+
+      $(document).ready(function() {
+        //viewModel.retrieveData();
+      });
+
+    </script>
+
 </div>
+

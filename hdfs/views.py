@@ -61,6 +61,34 @@ def listdir_paged(request, proj_slug, role_slug, path):
         'isdir': false
     }
     """
+    data = {
+     'files' : [ {
+        'name': 'mywork1',
+        'path': '/mydir/mywork1',
+        'raw_path': '/project_slug/role_slug/mydir/mywork',
+        'permission': '???',
+        'human_size': '12kb',
+        'project': 'proj_slug',
+        'role':  'role_slug',
+        'ctime': '',
+        'atime': '',
+        'isdir': False
+     },{
+        'name': 'mywork2',
+        'path': '/mydir/mywork2',
+        'raw_path': '/project_slug/role_slug/mydir/mywork',
+        'permission': '???',
+        'human_size': '12kb',
+        'project': 'proj_slug',
+        'role':  'role_slug',
+        'ctime': '',
+        'atime': '',
+        'isdir': False
+     }]
+
+    }
+    return render('listdir.mako', request, data)
+
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/auth/login')
     
