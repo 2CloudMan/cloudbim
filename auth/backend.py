@@ -36,13 +36,10 @@ import utils.conf
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from admin.models import get_profile, get_default_user_group, UserProfile
-# from useradmin.views import import_ldap_users
-# from useradmin import ldap_access
 
 import pam
-from django_auth_ldap.backend import LDAPBackend
 import ldap
-from django_auth_ldap.config import LDAPSearch
+
 
 
 LOG = logging.getLogger(__name__)

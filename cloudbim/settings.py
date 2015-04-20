@@ -42,6 +42,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'south',
+    
     'admin',
     'auth',
     'hbase',
@@ -57,6 +59,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.transaction.TransactionMiddleware',
 
     
     'utils.middleware.AjaxMiddleware',
@@ -103,6 +106,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+HADOOP_PROJECT_DIR='/cloudbim/'
 
 # templates config, define how to import templates.
 TEMPLATE_LOADERS = (

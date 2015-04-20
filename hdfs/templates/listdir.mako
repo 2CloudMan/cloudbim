@@ -38,6 +38,7 @@ ${ commonheader(request) | n,unicode }
                 </tr>
             </thead>
 
+
             <tbody id="files" data-bind="template: {name: 'fileTemplate', foreach: files}"></tbody>
         </table>
 

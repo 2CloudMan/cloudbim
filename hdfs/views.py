@@ -8,6 +8,7 @@ from datetime import datetime
 from django.utils.translation import ugettext as _
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.views.decorators.http import require_http_methods
+from django.template.defaultfilters import filesizeformat
 
 from utils.lib.django_util import  format_preserving_redirect
 from utils.lib.django_util import render
@@ -17,7 +18,8 @@ from utils.hadoop.fs.exceptions import WebHdfsException
 from utils.lib import paginator
 from django.http import HttpResponse
 from hdfs.forms import UploadFileForm, MkDirForm, RmTreeFormSet
-from admin.models import get_project_dir, get_profile
+from admin.models import get_project_dir, get_profile, ensure_new_fileinfo,\
+    FileInfo
 from admin.views import ensure_project_directory
 
 Log = logging.getLogger(__name__)
@@ -94,22 +96,18 @@ def listdir_paged(request, proj_slug, role_slug, path):
     
     # 判断给定的路径是否是在项目所在的目录下
     project_home = get_project_dir(request.group.groupprofile.project)
-    if not path.startswith(project_home):
-        raise PopupException('The given path not in the project path')
 
     # 检查项目目录是否存在，不存在就创建
-    if not request.fs.isdir(project_home):
-        ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
-    
+    ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
+
+    path = os.path.join(project_home, path[1:])
     # 判断给定路径是否是一个目录
     if not request.fs.isdir(path):
         Log.warn('user %s try to open a dir user the given path %s but it is not a directory!' %
                 (request.user.username, path)) 
-        raise Exception("Not a directory: %s" % (path,))
-#         raise PopupException("Not a directory: %s" % (path,))
+        raise PopupException("Not a directory: %s" % (path,))
     
     # 用户是否有查看目录的权限
-    
     if get_profile(request.user).has_file_permission(request.group, path, 'r')\
             or request.user.is_superuser:
         pagenum = int(request.GET.get('pagenum', 1))
@@ -175,19 +173,21 @@ def _massage_stats(request, stats):
     normalized = Hdfs.normpath(path)
     proj_slug = ''
     role_slug = ''
-#     group = stats['group']
-#     group_info =  group.split(':')
-#     if group_info != 2:
-#         return None
-#     proj_slug, role_slug = group_info
-#     
-        
+    owner = 'system'
+    try:
+        file = FileInfo.objects.get(path=path)
+        owner = file.owner.username
+    except FileInfo.DoesNotExist:
+        Log.warn("Can't find file info of File %s" % path)
+#     except Exception as e:
+#         Log.error("get file info except: path - %s" % path)
     return {
         'name': stats['name'],
         'path': '',
+        'owner': owner,
         'raw_path': normalized,
         'permission': '???',
-        'human_size': '12kb',
+        'human_size': filesizeformat(stats['size']),
         'project': proj_slug,
         'role':  role_slug,
         'ctime': datetime.fromtimestamp(stats['mtime']).strftime('%B %d, %Y %I:%M %p'),
@@ -251,6 +251,7 @@ def _upload_file(request):
     The uploaded file is stored in HDFS at its destination with a .tmp suffix.
     We just need to rename it to the destination path.
     """
+    
     form = UploadFileForm(request.POST, request.FILES)
     response = {'status': -1, 'data': ''}
 
@@ -262,31 +263,33 @@ def _upload_file(request):
         dest = form.cleaned_data['dest']
 
         if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
-            raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' % {'sep': posixpath.sep, 'name': uploaded_file.name}))
+            raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' %
+                                   {'sep': posixpath.sep, 'name': uploaded_file.name}))
 
-    
         # 判断用户是否有权限上传文件
-        if not get_profile(request.user).has_file_permission(request.group, dest, 'w'):
+        if not request.user.is_superuser and \
+                not get_profile(request.user).has_file_permission(request.group, dest, 'w'):
             raise PopupException(_('Permission deny: user %(user) try upload file %(name)s to destination %(dest).' 
                                    % {'user': request.user.username, 'name': uploaded_file.name, 'dest': dest}))
 
         dest = request.fs.join(dest, uploaded_file.name)
         tmp_file = uploaded_file.get_temp_path()
-        username = request.user.username
 
         try:
             # Remove tmp suffix of the file
-            request.fs.do_as_user(username, request.fs.rename, tmp_file, dest)
+#             request.fs.do_as_user(username, request.fs.rename, tmp_file, dest)
+            request.fs.do_as_superuser(request.fs.rename, tmp_file, dest)
             response['status'] = 0
-            
+
             # 为文件创建权限
-            
+            ensure_new_fileinfo(dest, request.user, request.group)
+
         except IOError, ex:
             already_exists = False
             try:
                 already_exists = request.fs.exists(dest)
             except Exception:
-              pass
+                pass
             if already_exists:
                 msg = _('Destination %(name)s already exists.')  % {'name': dest}
             else:
@@ -309,7 +312,12 @@ def mkdir(request):
         # No absolute directory specification allowed.
         if posixpath.sep in name or "#" in name:
             raise PopupException(_("Could not name folder \"%s\": Slashes or hashes are not allowed in filenames." % name))
-        request.fs.mkdir(os.path.join(path, name))
+ 
+        path = os.path.join(path, name)
+        request.fs.do_as_superuser(request.fs.mkdir, path)
+        
+        # create file info
+        ensure_new_fileinfo(path, request.user, request.group)
 
     return generic_op(MkDirForm, request, smart_mkdir, ["path", "name"], "path")
 
