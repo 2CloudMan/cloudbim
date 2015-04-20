@@ -201,10 +201,10 @@ ${ commonheader(request) | n,unicode }
 
       // Upload Plugin itself
       $('#drag-and-drop-zone').dmUploader({
-        url: '',
+        url: '/project/webform/worker/fb/upload/files',
         dataType: 'json',
         allowedTypes: '*',
-        extraData:{ 'dest' : ''},
+        extraData:{ 'dest' : '/cloudbim/webform/worker/'},
         onInit: function(){
           add_log('Penguin initialized :)');
         },
@@ -256,7 +256,10 @@ ${ commonheader(request) | n,unicode }
      <script id="fileTemplate" type="text/html">
         <tr>
             <td data-bind="click: handleSelect">
-                <span class="bimCheckbox" data-bind="click: select, css: {'glyphicon glyphicon-ok' : selected}"></span>
+                <span class="bimCheckbox" data-bind="click: selected, css: {'glyphicon glyphicon-ok' : selected}"></span>
+            </td>
+            <td>
+                <span data-bind="text: name"></span>
             </td>
         </tr>
     </script>
@@ -318,7 +321,7 @@ ${ commonheader(request) | n,unicode }
         self.page = ko.observable(new Page(page));
         self.recordsPerPage = ko.observable(30);
         self.targetPageNum = ko.observable(1);
-        //self.targetPath =
+        self.targetPath = '/project/webform/worker/fb/view/'
 
         self.files = ko.observableArray(ko.utils.arrayMap(files, function(file){
             new File(file);
@@ -348,7 +351,7 @@ ${ commonheader(request) | n,unicode }
         }
 
 
-        self.updateFileList = function (files, page, breadcrumbs, currentDirPath, isSentryManaged) {
+        self.updateFileList = function (files, page, breadcrumbs, currentDirPath) {
             //$(".tooltip").hide();
 
             //self.isCurrentDirSentryManaged(isSentryManaged);
@@ -382,7 +385,7 @@ ${ commonheader(request) | n,unicode }
         self.retrieveData = function () {
             self.isLoading(true);
 
-            $.getJSON(self.targetPath() + "?pagesize=" + self.recordsPerPage() + "&pagenum=" + self.targetPageNum() + "&filter=" + self.searchQuery() + "&sortby=" + self.sortBy() + "&descending=" + self.sortDescending() + "&format=json", function (data) {
+            $.getJSON(self.targetPath + "?pagesize=" + self.recordsPerPage() + "&pagenum=" + self.targetPageNum() + "&format=json", function (data) {
               if (data.error){
                 $(document).trigger("error", data.error);
                 self.isLoading(false);
@@ -394,13 +397,9 @@ ${ commonheader(request) | n,unicode }
                 return false;
               }
 
-              self.updateFileList(data.files, data.page, data.breadcrumbs, data.current_dir_path, data.is_sentry_managed);
+              self.updateFileList(data.files, data.page, data.breadcrumbs, data.current_dir_path);
 
-              if ($("#hueBreadcrumbText").is(":visible")) {
-                $(".hueBreadcrumb").show();
-                $("#hueBreadcrumbText").hide();
-                $("#editBreadcrumb").show();
-              }
+
             });
         };
 
@@ -450,7 +449,7 @@ ${ commonheader(request) | n,unicode }
 
 
       $(document).ready(function() {
-        //viewModel.retrieveData();
+        viewModel.retrieveData();
       });
 
     </script>

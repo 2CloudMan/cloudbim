@@ -36,7 +36,7 @@ urlpatterns = patterns('hdfs.views',
 # 
 #   # POST operations
 #   url(r'^save$', 'save_file'),
-url(r'^upload/file$', 'upload_file', name='upload_file'),
+url(r'^upload/files$', 'upload_file', name='upload_file'),
 #   url(r'^upload/archive$', 'upload_archive', name='upload_archive'),
 #   url(r'^trash/restore$', 'trash_restore', name='trash_restore'),
 #   url(r'^trash/purge$', 'trash_purge', name='trash_purge'),

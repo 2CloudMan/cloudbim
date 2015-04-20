@@ -10,7 +10,7 @@ from django.http.response import HttpResponse, HttpResponseRedirect
 from django.views.decorators.http import require_http_methods
 from django.template.defaultfilters import filesizeformat
 
-from utils.lib.django_util import  format_preserving_redirect
+from utils.lib.django_util import  format_preserving_redirect, JsonResponse
 from utils.lib.django_util import render
 from utils.lib.exceptions_renderable import PopupException
 from utils.hadoop.fs.hadoopfs import Hdfs
@@ -63,33 +63,6 @@ def listdir_paged(request, proj_slug, role_slug, path):
         'isdir': false
     }
     """
-    data = {
-     'files' : [ {
-        'name': 'mywork1',
-        'path': '/mydir/mywork1',
-        'raw_path': '/project_slug/role_slug/mydir/mywork',
-        'permission': '???',
-        'human_size': '12kb',
-        'project': 'proj_slug',
-        'role':  'role_slug',
-        'ctime': '',
-        'atime': '',
-        'isdir': False
-     },{
-        'name': 'mywork2',
-        'path': '/mydir/mywork2',
-        'raw_path': '/project_slug/role_slug/mydir/mywork',
-        'permission': '???',
-        'human_size': '12kb',
-        'project': 'proj_slug',
-        'role':  'role_slug',
-        'ctime': '',
-        'atime': '',
-        'isdir': False
-     }]
-
-    }
-    return render('listdir.mako', request, data)
 
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/auth/login')
@@ -142,16 +115,17 @@ def listdir_paged(request, proj_slug, role_slug, path):
     
         files = [ _massage_stats(request, s) for s in shown_stats ]
 
-
+        page = _massage_page(page)
         data = \
         {
-            'user' : request.user,
+            #'user' : request.user,
             'curr_proj': proj_slug,
             'curr_role': role_slug,
             'path': '',
             'raw_path': path,
             'breadcrumbs': breadcrumbs,
             'files': files,
+            'page' : page,
             'pagenum': pagenum,
             'pagesize': pagesize
         }
@@ -161,6 +135,11 @@ def listdir_paged(request, proj_slug, role_slug, path):
         Log.warn("Permission deny: user %s try to open directory %s" %
                  (request.user.username, path))
         data = {'error': 'Permission deny'}
+
+    # 返回格式控制
+    format = request.GET.get('format', None)
+    if format == 'json':
+        return JsonResponse(data)
     return render('listdir.mako', request, data)
 
 
@@ -190,9 +169,20 @@ def _massage_stats(request, stats):
         'human_size': filesizeformat(stats['size']),
         'project': proj_slug,
         'role':  role_slug,
-        'ctime': datetime.fromtimestamp(stats['mtime']).strftime('%B %d, %Y %I:%M %p'),
-        'atime': datetime.fromtimestamp(stats['atime']).strftime('%B %d, %Y %I:%M %p'),
+        'ctime': '',#datetime.fromtimestamp(stats['mtime']).strftime('%B %d, %Y %I:%M %p'),
+        'atime': '',#datetime.fromtimestamp(stats['atime']).strftime('%B %d, %Y %I:%M %p'),
         'isdir': stat.S_ISDIR(stats['mode']),
+    }
+
+def _massage_page(page):
+    return {
+        'number': page.number,
+        'num_pages': page.num_pages(),
+        'previous_page_number': page.previous_page_number(),
+        'next_page_number': page.next_page_number(),
+        'start_index': page.start_index(),
+        'end_index': page.end_index(),
+        'total_count': page.total_count()
     }
     
     
