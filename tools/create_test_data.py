@@ -4,10 +4,10 @@ Created on Apr 16, 2015
 
 @author: linmiancheng
 '''
-from admin.models import Project, UserProfile, GroupProfile, GroupPermission, Role,\
+from admin.models import Project, GroupProfile, Role,\
         auth_models, FileInfo, BimFilePermission
 from django.db.backends.dummy.base import IntegrityError
-
+from django.conf import settings
 DATA_STRUCT = [
                {
                    "project": 'cloudbim',
@@ -17,7 +17,7 @@ DATA_STRUCT = [
                     "project": 'webform',
                     'role': 'worker',
                     "file_perm": [{
-                                  "path": '/project/webform/worker',
+                                  "path": settings.HADOOP_PROJECT_DIR + 'webform/worker',
                                   "perm": 'rwx',
                                   },
                                   ]
@@ -45,7 +45,7 @@ def admin_init(group_detail):
     user = auth_models.User.objects.filter(is_superuser=True).first()
 
     try:
-        project = Project(name=proj_name, project_directory='/project/'+proj_name,
+        project = Project(name=proj_name, project_directory=settings.HADOOP_PROJECT_DIR+proj_name,
                            slug=proj_name, manager=user)
         project.save()
         print 'project created'

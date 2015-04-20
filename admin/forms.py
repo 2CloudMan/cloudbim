@@ -26,11 +26,12 @@ from django.forms.util import ErrorList
 from django.utils.translation import ugettext as _, ugettext_lazy as _t
 
 from utils import conf as desktop_conf
+from utils.hadoop import cluster
 from utils.lib.django_util import get_username_re_rule, get_groupname_re_rule,\
         get_projectname_re_rule, get_permission_re_rule
 
-from models import GroupPermission, BimFilePermission, BimHbasePermission, Project
-from models import get_default_user_group
+from .models import BimFilePermission, BimHbasePermission, Project
+from .models import get_default_user_group, GroupProfile, ensure_proj_role_directory
 from password_policy import get_password_validators
 
 
@@ -157,91 +158,6 @@ class SuperUserChangeForm(UserChangeForm):
         self.initial['groups'] = set([default_group])
       else:
         self.initial['groups'] = []
-
-    
-class AddLdapUsersForm(forms.Form):
-  username_pattern = forms.CharField(
-      label=_t("Username"),
-      help_text=_t("Required. 30 characters or fewer with username. 64 characters or fewer with DN. No whitespaces or colons."),
-      error_messages={'invalid': _t("Whitespaces and ':' not allowed")})
-  dn = forms.BooleanField(label=_t("Distinguished name"),
-                          help_text=_t("Whether or not the user should be imported by "
-                                    "distinguished name."),
-                          initial=False,
-                          required=False)
-  ensure_home_directory = forms.BooleanField(label=_t("Create home directory"),
-                                            help_text=_t("Create home directory for user if one doesn't already exist."),
-                                            initial=True,
-                                            required=False)
-
-  def __init__(self, *args, **kwargs):
-    super(AddLdapUsersForm, self).__init__(*args, **kwargs)
-    if get_server_choices():
-      self.fields['server'] = forms.ChoiceField(choices=get_server_choices(), required=True)
-
-  def clean(self):
-    cleaned_data = super(AddLdapUsersForm, self).clean()
-    username_pattern = cleaned_data.get("username_pattern")
-    dn = cleaned_data.get("dn")
-
-    try:
-      if dn:
-        validate_dn(username_pattern)
-      else:
-        validate_username(username_pattern)
-    except AssertionError, e:
-      errors = self._errors.setdefault('username_pattern', ErrorList())
-      errors.append(e.message)
-      raise forms.ValidationError(e.message)
-
-    return cleaned_data
-
-
-class AddLdapGroupsForm(forms.Form):
-  groupname_pattern = forms.CharField(
-      label=_t("Name"),
-      max_length=256,
-      help_text=_t("Required. 256 characters or fewer."),
-      error_messages={'invalid': _t("256 characters or fewer.") })
-  dn = forms.BooleanField(label=_t("Distinguished name"),
-                          help_text=_t("Whether or not the group should be imported by "
-                                    "distinguished name."),
-                          initial=False,
-                          required=False)
-  import_members = forms.BooleanField(label=_t('Import new members'),
-                                      help_text=_t('Import unimported or new users from the group.'),
-                                      initial=False,
-                                      required=False)
-  ensure_home_directories = forms.BooleanField(label=_t('Create home directories'),
-                                                help_text=_t('Create home directories for every member imported, if members are being imported.'),
-                                                initial=True,
-                                                required=False)
-  import_members_recursive = forms.BooleanField(label=_t('Import new members from all subgroups'),
-                                                help_text=_t('Import unimported or new users from the all subgroups.'),
-                                                initial=False,
-                                                required=False)
-
-  def __init__(self, *args, **kwargs):
-    super(AddLdapGroupsForm, self).__init__(*args, **kwargs)
-    if get_server_choices():
-      self.fields['server'] = forms.ChoiceField(choices=get_server_choices(), required=True)
-
-  def clean(self):
-    cleaned_data = super(AddLdapGroupsForm, self).clean()
-    groupname_pattern = cleaned_data.get("groupname_pattern")
-    dn = cleaned_data.get("dn")
-
-    try:
-      if dn:
-        validate_dn(groupname_pattern)
-      else:
-        validate_groupname(groupname_pattern)
-    except AssertionError, e:
-      errors = self._errors.setdefault('groupname_pattern', ErrorList())
-      errors.append(e.message)
-      raise forms.ValidationError(e.message)
-
-    return cleaned_data
 
 
 class ProjectFrom(forms.Form):
@@ -411,15 +327,15 @@ class TablePermissionsEditForm(forms.ModelForm):
     add = updated.difference(current)
     return delete, add
 
-  def save(self):
-    self._save_permissions()
-
-  def _save_permissions(self):
-    delete_group, add_group = self._compute_diff("groups")
-    for group in delete_group:
-      GroupPermission.objects.get(group=group, hbase_perm=self.instance).delete()
-    for group in add_group:
-      GroupPermission.objects.create(group=group, hbase_perm=self.instance)
+#   def save(self):
+#     self._save_permissions()
+# 
+#   def _save_permissions(self):
+#     delete_group, add_group = self._compute_diff("groups")
+#     for group in delete_group:
+#       GroupPermission.objects.get(group=group, hbase_perm=self.instance).delete()
+#     for group in add_group:
+#       GroupPermission.objects.create(group=group, hbase_perm=self.instance)
 
 
 def _make_model_field(label, initial, choices, multi=True):
@@ -436,13 +352,24 @@ def _make_model_field(label, initial, choices, multi=True):
       field.initial = initial.pk
   return field
 
-class SyncLdapUsersGroupsForm(forms.Form):
-  ensure_home_directory = forms.BooleanField(label=_t("Create Home Directories"),
-                                            help_text=_t("Create home directory for every user, if one doesn't already exist."),
-                                            initial=True,
-                                            required=False)
-  def __init__(self, *args, **kwargs):
-    super(SyncLdapUsersGroupsForm, self).__init__(*args, **kwargs)
-    if get_server_choices():
-      self.fields['server'] = forms.ChoiceField(choices=get_server_choices(), required=True)
+class GroupProfileForm(forms.ModelForm):
+    class Meta:
+        model = GroupProfile  # 为什么是group，这里得注意下
 
+    def __init__(self, *args, **kwargs):
+        super(GroupProfileForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        if self.cleaned_data["project"] and self.cleaned_data['role']:
+            # create the project's role directory on hadoop and create name by project and role
+            proj_slug = self.cleaned_data['project'].slug
+            role_slug = self.cleaned_data['role'].slug
+
+            #create a default filesystem
+            fs = cluster.get_hdfs("default")
+            
+            # make a directory if it doesn't exit
+            ensure_proj_role_directory(fs, proj_slug, role_slug)
+            
+        return self.cleaned_data
+    

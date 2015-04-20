@@ -3,6 +3,7 @@ import logging
 import threading
 import json
 
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 
 from utils.lib.django_util import render
@@ -208,8 +209,8 @@ def ensure_home_directory(fs, username):
 
 
 def ensure_project_directory(fs, proj_slug):
-    proj_dir = '/project/%s' % proj_slug
-    
+    proj_dir = settings.HADOOP_PROJECT_DIR + '%s' % proj_slug
+
     # 暂时使用超级管理员
     fs.do_as_superuser(fs.create_proj_dir, proj_dir)
 

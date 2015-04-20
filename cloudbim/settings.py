@@ -107,6 +107,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+
+HADOOP_PROJECT_DIR='/cloudbim/'
+
 # templates config, define how to import templates.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',

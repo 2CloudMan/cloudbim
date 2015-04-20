@@ -235,24 +235,29 @@ class Hdfs(object):
       yield path
 
 
-  def create_proj_dir(self, proj_path=None):
+  def create_dir_if_unexist(self, path):
 
-    if not self.exists(proj_path):
+    if not self.exists(path) and path:
       user = self.user
       try:
         try:
           self.setuser(self.superuser)
-          self.mkdir(proj_path)
+          self.mkdir(path)
 #           self.chmod(proj_path, 0755)
 #           self.chown(proj_path, user, user)
         except IOError:
-          msg = 'Failed to create home dir ("%s") as superuser %s' % (proj_path, self.superuser)
+          msg = 'Failed to create  dir ("%s") as superuser %s' % (path, self.superuser)
           LOG.exception(msg)
           raise
       finally:
         self.setuser(user)
 
+  def create_proj_dir(self, proj_path):
+    self.create_dir_if_unexist(proj_path)
 
+  def create_role_dir(self, role_path):
+    self.create_dir_if_unexist(role_path)
+    
   def create_home_dir(self, home_path=None):
     if home_path is None:
       home_path = self.get_home_dir()

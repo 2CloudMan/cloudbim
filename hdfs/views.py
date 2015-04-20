@@ -77,11 +77,9 @@ def listdir_paged(request, proj_slug, role_slug, path):
     if not request.fs.isdir(path):
         Log.warn('user %s try to open a dir user the given path %s but it is not a directory!' %
                 (request.user.username, path)) 
-        raise Exception("Not a directory: %s" % (path,))
-#         raise PopupException("Not a directory: %s" % (path,))
+        raise PopupException("Not a directory: %s" % (path,))
     
     # 用户是否有查看目录的权限
-
     if get_profile(request.user).has_file_permission(request.group, path, 'r')\
             or request.user.is_superuser:
         pagenum = int(request.GET.get('pagenum', 1))

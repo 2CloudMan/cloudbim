@@ -52,14 +52,14 @@ class GroupMiddleware(object):
     def process_view(self, request, view_func, view_args, view_kwargs):
         if request.user.is_authenticated() and 'proj_slug' in view_kwargs\
                 and 'role_slug' in view_kwargs:
-            
+
             try:
                 request.group = get_profile(request.user).get_group(view_kwargs['proj_slug'], view_kwargs['role_slug'])
                 if not request.group:
                     raise Exception('you are not a %s of project %s' % (view_kwargs['proj_slug'],
                                                                         view_kwargs['role_slug']))
             except Exception as e:
-                raise Exception(e)
+                raise PopupException('%s' % e)
         else:
             request.project = None
         

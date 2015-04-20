@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from django.db import models
 import logging
-
+from django.conf import settings
 from django.db import transaction
 from django.db import connection, models
 from django.contrib.auth import models as auth_models
@@ -14,6 +14,7 @@ from utils.lib.exceptions_renderable import PopupException
 from utils.hadoop import cluster
 from utils.models import SAMPLE_USERNAME
 import conf
+from django.utils.encoding import python_2_unicode_compatible
 
 # Create your models here.
 LOG = logging.getLogger(__name__)
@@ -46,6 +47,9 @@ class UserProfile(models.Model):
     is_rightmanager = models.BooleanField(_('user right status'), default=False,
         help_text=_('Designates that this user has the permissions to manage right in this system '))
     
+    def __str__(self):
+        return self.user.username
+        
     def get_groups(self):
         return self.user.groups.all()
 
@@ -57,8 +61,14 @@ class UserProfile(models.Model):
         # user must be a member of this group
         if self.user not in group.user_set.all():
             return False
-        return GroupPermission.objects.filter(group=group, file_perm__file__path=path,
-                                       file_perm__action__contains=perm).count() > 0
+        
+        perm = BimFilePermission.objects.filter(file__path=path,
+                                               action__contains=perm).first()
+
+        if not perm:
+            return False
+        else:
+            return perm.groups.filter(name=group.name).exists()
 
     def has_hbase_permission(self, table, perm):
         if not table or not perm:
@@ -105,6 +115,9 @@ class Project(models.Model):
     created_time = models.DateTimeField(default=timezone.now)
     manager = models.ForeignKey(auth_models.User)
     slug = models.CharField(max_length=60, unique=True)
+    
+    def __str__(self):
+        return "%s:%s" % (self.name, self.slug)
 
 
 class Role(models.Model):
@@ -112,26 +125,74 @@ class Role(models.Model):
     create_time = models.DateTimeField(default=timezone.now)
     role_directory = models.CharField(editable=True, max_length=1024, null=True, blank=True)
     slug = models.CharField(max_length=60, unique=True)
+    
+    def __str__(self):
+        return "%s:%s" % (self.name, self.slug)
 
 
 class GroupProfile(models.Model):
     group = models.OneToOneField(auth_models.Group)
-    role = models.ForeignKey(Role)
-    project = models.ForeignKey('Project')
+    role = models.ForeignKey(Role, null=True, blank=True)
+    project = models.ForeignKey('Project', null=True, blank=True)
+    
+    def __str__(self):
+        return self.group.name
+
+# class GroupPermission(models.Model):
+#     """
+#     Represents the permissions a group has.
+#     """
+#     group = models.ForeignKey(auth_models.Group)
+#     file_perm = models.ForeignKey("BimFilePermission", blank=True, null=True)
+#     hbase_perm = models.ForeignKey('BimHbasePermission', blank=True, null=True)
+#       
+#   
+#     class Meta:
+#         index_together = [
+#             ["group", "file_perm"], ["group", "hbase_perm"]
+#         ]
 
 
-class GroupPermission(models.Model):
-    """
-    Represents the permissions a group has.
-    """
-    group = models.ForeignKey(auth_models.Group)
-    file_perm = models.ForeignKey("BimFilePermission", blank=True, null=True)
-    hbase_perm = models.ForeignKey('BimHbasePermission', blank=True, null=True)
+class TableInfo(models.Model):
+    table = models.CharField(max_length=255, unique=True)
+    creator = models.ForeignKey(auth_models.User)
+    group = models.ForeignKey(auth_models.Group, help_text='the role that table belong for')
 
     class Meta:
         index_together = [
-            ["group", "file_perm"], ["group", "hbase_perm"]
+            ["table"],
         ]
+
+    def __str__(self):
+        return "%s:%s(%d)" % (self.table, self.creator, self.pk)
+
+
+class BimHbasePermission(models.Model):
+    """
+    Set of  permissions that a hdfs file supports.
+  
+    For now, we only assign permissions to groups, though that may change.
+    """
+    groups = models.ManyToManyField(auth_models.Group) 
+    table = models.ForeignKey(TableInfo)
+    action = models.CharField(max_length=255)
+    description = models.CharField(max_length=255, blank=True)
+    creator = models.ForeignKey(auth_models.User)
+    create_time = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        index_together = [
+            ["table", "action"],
+        ]
+        unique_together = (("table", "action"), )
+
+    def __str__(self):
+        return "%s.%s:%s(%d)" % (self.table, self.action, self.description, self.pk)
+    
+    @classmethod
+    def get_object_permission(cls, table, action):
+        return BimHbasePermission.objects.get(table=table, action=action)
+
 
 class FileInfo(models.Model):
     path = models.CharField(max_length=255, unique=True)  # 使用linux最大文件路径长度
@@ -144,7 +205,35 @@ class FileInfo(models.Model):
         ]
 
     def __str__(self):
-        return "%s.%s:%s(%d)" % (self.path, self.owner, self.group, self.pk)
+        return self.path
+
+
+# Permission Management
+class BimFilePermission(models.Model):
+    """
+    Set of  permissions that a hdfs file supports.
+    
+    For now, we only assign permissions to groups, though that may change.
+    """
+    file = models.ForeignKey(FileInfo)  # 使用linux最大文件路径长度
+    action = models.CharField(max_length=100)
+    description = models.CharField(max_length=255, blank=True)
+    groups = models.ManyToManyField(auth_models.Group) # , through=GroupPermission
+    creator = models.ForeignKey(auth_models.User)
+    create_time = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        index_together = [
+            ["file", "action"],
+        ]
+        unique_together = (("file", "action"), )
+
+    def __str__(self):
+        return "%s.%s:%s(%d)" % (self.file, self.action, self.description, self.pk)
+    
+    @classmethod
+    def get_object_permission(cls, path, action):
+        return BimFilePermission.objects.get(file__path=path, action=action)
 
 
 @transaction.commit_manually
@@ -168,80 +257,18 @@ def ensure_new_fileinfo(path, owner, group):
         transaction.commit()
 
 
-class TableInfo(models.Model):
-    table = models.CharField(max_length=255, unique=True)
-    creator = models.ForeignKey(auth_models.User)
-    group = models.ForeignKey(auth_models.Group, help_text='the role that table belong for')
-    
-    class Meta:
-        index_together = [
-            ["table"],
-        ]
-
-    def __str__(self):
-        return "%s:%s(%d)" % (self.table, self.creator, self.pk)
-
-class BimHbasePermission(models.Model):
-    """
-    Set of  permissions that a hdfs file supports.
-  
-    For now, we only assign permissions to groups, though that may change.
-    """
-    groups = models.ManyToManyField(auth_models.Group, through=GroupPermission)
-    table = models.ForeignKey(TableInfo)
-    action = models.CharField(max_length=255)
-    description = models.CharField(max_length=255, blank=True)
-    creator = models.ForeignKey(auth_models.User)
-    create_time = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        index_together = [
-            ["table", "action"],
-        ]
-        unique_together = (("table", "action"), )
-
-    def __str__(self):
-        return "%s.%s:%s(%d)" % (self.table, self.action, self.description, self.pk)
-    
-    @classmethod
-    def get_object_permission(cls, table, action):
-        return BimHbasePermission.objects.get(table=table, action=action)
-
-
-# Permission Management
-class BimFilePermission(models.Model):
-    """
-    Set of  permissions that a hdfs file supports.
-    
-    For now, we only assign permissions to groups, though that may change.
-    """
-    file = models.ForeignKey(FileInfo)  # 使用linux最大文件路径长度
-    action = models.CharField(max_length=100)
-    description = models.CharField(max_length=255, blank=True)
-    groups = models.ManyToManyField(auth_models.Group, through=GroupPermission)
-    creator = models.ForeignKey(auth_models.User)
-    create_time = models.DateTimeField(default=timezone.now)
-    
-    class Meta:
-        index_together = [
-            ["file", "action"],
-        ]
-        unique_together = (("file", "action"), )
-
-    def __str__(self):
-        return "%s.%s:%s(%d)" % (self.file, self.action, self.description, self.pk)
-    
-    @classmethod
-    def get_object_permission(cls, path, action):
-        return BimFilePermission.objects.get(file__path=path, action=action)
-
-
 
     
     
 def group_has_table_permission(group, table, perm):
-    return GroupPermission.objects.filter(group=group, hbase_perm__table__table=table,
-                                           hbase_perm__contains=perm).count() > 0
+
+    perm = BimHbasePermission.objects.filter(table__table=table,
+                                           action__contains=perm).first()
+                                
+    if not perm:
+        return False
+    else:
+        return perm.groups.filter(name=group.name).exists()
 
 
 def get_profile(user):
@@ -280,7 +307,7 @@ def get_project_dir(project):
     if not project:
         return None
     if not project.project_directory:
-        project.project_directory = '/project/%s' % project.slug
+        project.project_directory = settings.HADOOP_PROJECT_DIR + '%s' % project.slug
         try:
             project.save()
             return project.project_directory
@@ -345,3 +372,11 @@ def install_sample_user():
   fs.do_as_user(SAMPLE_USERNAME, fs.create_home_dir)
 
   return user
+
+
+def ensure_proj_role_directory(fs, proj_slug, role_slug):
+    proj_dir =  settings.HADOOP_PROJECT_DIR + proj_slug
+    role_dir = proj_dir + '/%s' % role_slug
+
+    fs.do_as_superuser(fs.create_proj_dir, proj_dir)
+    fs.do_as_superuser(fs.create_role_dir, role_dir)
