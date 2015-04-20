@@ -137,7 +137,7 @@ class HDFSfileUploadHandler(FileUploadHandler):
 
   def new_file(self, field_name, file_name, *args, **kwargs):
     # Detect "HDFS" in the field name.
-    if field_name.upper().startswith('HDFS'):
+    if field_name.upper().startswith('FILE'):
       try:
         self._file = HDFStemporaryUploadedFile(self.request, file_name, self._destination)
         LOG.debug('Upload attempt to %s' % (self._file.get_temp_path(),))

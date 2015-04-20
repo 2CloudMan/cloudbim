@@ -103,7 +103,7 @@ CopyFormSet = formset_factory(CopyForm, formset=BaseCopyFormSet, extra=0)
 class UploadFileForm(forms.Form):
   op = "upload"
   # The "hdfs" prefix in "hdfs_file" triggers the HDFSfileUploadHandler
-  hdfs_file = FileField(forms.Form, label=_("File to Upload"))
+  file = FileField(forms.Form, label=_("File to Upload"))
   dest = PathField(label=_("Destination Path"), help_text=_("Filename or directory to upload to."))
 
 class UploadArchiveForm(forms.Form):

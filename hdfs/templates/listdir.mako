@@ -107,7 +107,7 @@ ${ commonheader(request) | n,unicode }
                   <div class="browser">
                     <label>
                       <span>Click to open the file Browser</span>
-                      <input type="file" name="files[]" multiple="multiple" title="Click to add Files">
+                      <input type="file" name="files" multiple="multiple" title="Click to add Files">
                     </label>
                   </div>
               </div>
@@ -210,7 +210,7 @@ ${ commonheader(request) | n,unicode }
         url: '/project/webform/worker/fb/upload/files',
         dataType: 'json',
         allowedTypes: '*',
-        extraData:{ 'dest' : '/cloudbim/webform/worker/'},
+        extraData:{ 'dest' : '/worker/'},
         onInit: function(){
           add_log('Penguin initialized :)');
         },
@@ -340,7 +340,7 @@ ${ commonheader(request) | n,unicode }
         self.page = ko.observable(new Page(page));
         self.recordsPerPage = ko.observable(30);
         self.targetPageNum = ko.observable(1);
-        self.targetPath = '/project/webform/worker/fb/view/'
+        self.targetPath = '/project/webform/worker/fb/view/worker'
 
         self.files = ko.observableArray(ko.utils.arrayMap(files, function(file){
             new File(file);
