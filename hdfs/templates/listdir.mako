@@ -16,11 +16,11 @@ ${ commonheader(request) | n,unicode }
         <div class="row">
             <div class="col col-lg-6">
             <ul class="nav nav-pills hueBreadcrumbBar">
-                <li><a href="" class="upLink"><span class="glyphicon glyphicon-arrow-left"></span></a></li>
+                <li data-bind="css:{'disabled': breadcrumbs().length == 1}"><a href="" class="upLink" data-bind="click: folderUp"><span class="glyphicon glyphicon-arrow-left"></span></a></li>
                 <li>
                     <ul class="hueBreadcrumb" data-bind="foreach: breadcrumbs" style="padding-right:40px; padding-top: 12px">
-                        <li data-bind="visible: label == '/'"><a href="#" data-bind=""><span class="divider" data-bind="text: label"></span></a></li>
-                        <li data-bind="visible: label != '/'"><a href="#" data-bind="text: label"></a><span class="divider">/</span></li>
+                        <li data-bind="visible: label == '/'"><a href="" data-bind="click: show"><span class="divider" data-bind="text: label"></span></a></li>
+                        <li data-bind="visible: label != '/'"><a href="" data-bind="text: label" click:show></a><span class="divider">/</span></li>
                     </ul>
                 </li>
             </ul>
@@ -50,7 +50,7 @@ ${ commonheader(request) | n,unicode }
 
 
         <div class="pull-left" style="margin:20px 0;">
-            <button type="button" class="btn btn-primary" data-bind="enable : selectedFiles().length == 1">Download</button>
+            <button type="button" class="btn btn-primary" data-bind="enable : selectedFiles().length == 1 && !selectedFile().isdir">Download</button>
             <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-bind="enable : selectedFiles().length > 0">Delete</button>
         </div>
 
@@ -58,22 +58,22 @@ ${ commonheader(request) | n,unicode }
         <div>
             <nav>
               <ul class="pagination pull-right">
-                <li data-bind="css: { 'disabled': (page().number === page().start_index || page().num_pages <= 1)>
+                <li data-bind="css: { 'disabled': (page().number === page().previous_page_number || page().num_pages <= 1)}">
                   <a href="#" aria-label="First">
                     <span class="glyphicon glyphicon-fast-backward"></span>
                   </a>
                 </li>
-                <li data-bind="css: { 'disabled': (page().number === page().start_index || page().num_pages <= 1)>
+                <li data-bind="css: { 'disabled': (page().number === page().previous_page_number || page().num_pages <= 1)}">
                   <a href="#" aria-label="Previous">
                     <span class="glyphicon glyphicon-backward"></span>
                   </a>
                 </li>
-                <li data-bind="css: { 'disabled': (page().number === page().last_index || page().num_pages <= 1)>
+                <li data-bind="css: { 'disabled': (page().number === page().num_pages)}">
                   <a href="#" aria-label="Next">
                     <span class="glyphicon glyphicon-forward"></span>
                   </a>
                 </li>
-                <li data-bind="css: { 'disabled': (page().number === page().last_index || page().num_pages <= 1)>
+                <li data-bind="css: { 'disabled': (page().number === page().num_pages)}">
                   <a href="#" aria-label="Last">
                     <span class="glyphicon glyphicon-fast-forward"></span>
                   </a>
@@ -81,7 +81,7 @@ ${ commonheader(request) | n,unicode }
               </ul>
             </nav>
 
-            <div class="form-inline pagination-input-form inline pull-right" style="margin: 25px 10px;">
+            <div class="form-inline pagination-input-form inline pull-right" style="margin: 20px 10px;">
               <span>${_('Page')}</span>
               <input type="text" style="width: 40px" data-bind="value: page().number, valueUpdate: 'afterkeydown', event: { change: skipTo }" class="pagination-input" />
               <input type="hidden" id="current_page" data-bind="value: page().number" />
@@ -96,7 +96,7 @@ ${ commonheader(request) | n,unicode }
             <div class="modal-content">
               <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">上传至: /home/haha</h4>
+                <h4 class="modal-title" id="myModalLabel">上传至: ${path}</h4>
               </div>
 
               <div class="modal-body">
@@ -310,6 +310,11 @@ ${ commonheader(request) | n,unicode }
         return {
             url: breadcrumb.url,
             label: breadcrumb.label,
+            show: function() {
+                console.log("show called");
+                //self.targetPath('/project/${curr_proj}/${curr_role}/fb/view${url}');
+                location.href = '/project/${curr_proj}/${curr_role}/fb/view' + this.url;
+            }
 
         }
       }
@@ -338,7 +343,7 @@ ${ commonheader(request) | n,unicode }
         self.page = ko.observable(new Page(page));
         self.recordsPerPage = ko.observable(30);
         self.targetPageNum = ko.observable(1);
-        self.targetPath = '/project/webform/worker/fb/view/'
+        self.targetPath = ko.observable('/project/${curr_proj}/${curr_role}/fb/view${path}')
 
         self.files = ko.observableArray(ko.utils.arrayMap(files, function(file){
             new File(file);
@@ -356,6 +361,10 @@ ${ commonheader(request) | n,unicode }
             });
         }, self);
 
+        self.selectedFile = ko.computed(function () {
+            return self.selectedFiles()[0];
+        }, self);
+
         self.selectAll = function() {
 
             console.log('selectAll');
@@ -369,6 +378,13 @@ ${ commonheader(request) | n,unicode }
                 file.selected(self.allSelected());
             });
             return true;
+        }
+
+        self.folderUp = function() {
+            self.targetPath('/project/${curr_proj}/${curr_role}/fb/view'+self.breadcrumbs()[self.breadcrumbs().length - 2].url);
+
+            location.href = self.targetPath();
+
         }
 
 
@@ -390,7 +406,7 @@ ${ commonheader(request) | n,unicode }
               return new Breadcrumb(breadcrumb);
             }));
 
-            self.currentPath(currentDirPath);
+            //self.currentPath(currentDirPath);
 
             //$('.uploader').trigger('fb:updatePath', {dest:self.currentPath()});
 
@@ -406,7 +422,7 @@ ${ commonheader(request) | n,unicode }
         self.retrieveData = function () {
             self.isLoading(true);
 
-            $.getJSON(self.targetPath + "?pagesize=" + self.recordsPerPage() + "&pagenum=" + self.targetPageNum() + "&format=json", function (data) {
+            $.getJSON(self.targetPath() + "?pagesize=" + self.recordsPerPage() + "&pagenum=" + self.targetPageNum() + "&format=json", function (data) {
               if (data.error){
                 $(document).trigger("error", data.error);
                 self.isLoading(false);
@@ -424,13 +440,40 @@ ${ commonheader(request) | n,unicode }
             });
         };
 
-        self.viewFile = function() {
+        self.viewFile = function (file) {
+            if (file.isdir) {
+              // Reset page number so that we don't hit a page that doesn't exist
+              self.targetPageNum(1);
+              self.targetPath('/project/${curr_proj}/${curr_role}/fb/view'+ file.path);
+              location.href = self.targetPath();
+            } else {
+              ;
+            }
+        };
 
+        self.goToPage = function(pageNumber) {
 
+            console.log('Skip To Page:' +  pageNumber);
+
+            self.targetPageNum(pageNumber);
+            if (location.hash.indexOf("!!") > -1){
+              location.hash =  location.hash.substring(0, location.hash.indexOf("!!")) + "!!" + pageNumber;
+            } else {
+              location.hash += "!!" + pageNumber;
+            }
         }
 
         self.skipTo = function() {
-            console.log('skipTo');
+
+            var doc = document,
+            old_page = doc.querySelector('#current_page').value,
+            page = doc.querySelector('.pagination-input');
+
+            if (! isNaN(page.value) && (page.value > 0 && page.value <= self.page().num_pages)) {
+              self.goToPage(page.value);
+            } else {
+              page.value = old_page;
+            }
         };
 
         self.deleteSelected = function () {
