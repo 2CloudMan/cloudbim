@@ -13,17 +13,22 @@ ${ commonheader(request) | n,unicode }
     </div>
 
     <div class="container" id="pjax-container">
-        <div class="row" style="margin-top: 24px">
-            <div class="col-lg-6">
-                <ol class="breadcrumb">
-                  <li><a href="#">Home</a></li>
-                  <li><a href="#">Library</a></li>
-                </ol>
+        <div class="row">
+            <div class="col col-lg-6">
+            <ul class="nav nav-pills hueBreadcrumbBar">
+                <li><a href="" class="upLink"><span class="glyphicon glyphicon-arrow-left"></span></a></li>
+                <li>
+                    <ul class="hueBreadcrumb" data-bind="foreach: breadcrumbs" style="padding-right:40px; padding-top: 12px">
+                        <li data-bind="visible: label == '/'"><a href="#" data-bind=""><span class="divider" data-bind="text: label"></span></a></li>
+                        <li data-bind="visible: label != '/'"><a href="#" data-bind="text: label"></a><span class="divider">/</span></li>
+                    </ul>
+                </li>
+            </ul>
             </div>
-
+            <div class="col col-lg-2" style="padding:12px 0">
             <button class="btn btn-default" data-toggle="modal" data-target="#uploadFileModal">+f</button>
             <button class="btn btn-default" data-toggle="modal" data-target="#createDirModal">+d</button>
-
+            </div>
         </div>
 
         <table class="table table-striped">
@@ -33,6 +38,7 @@ ${ commonheader(request) | n,unicode }
                     <span class="bimCheckbox" data-bind="click: selectAll, css: {'glyphicon glyphicon-ok' : allSelected}"><span>
                     </td>
                     <td><strong>Name</strong></td>
+                    <td><strong>Size</strong></td>
                     <td><strong>Owner</strong></td>
                     <td><strong>Date</strong></td>
                 </tr>
@@ -44,7 +50,7 @@ ${ commonheader(request) | n,unicode }
 
 
         <div class="pull-left" style="margin:20px 0;">
-            <button type="button" class="btn btn-primary" data-bind="enable : selectedFiles().length = 0">Download</button>
+            <button type="button" class="btn btn-primary" data-bind="enable : selectedFiles().length == 1">Download</button>
             <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-bind="enable : selectedFiles().length > 0">Delete</button>
         </div>
 
@@ -54,22 +60,22 @@ ${ commonheader(request) | n,unicode }
               <ul class="pagination pull-right">
                 <li data-bind="css: { 'disabled': (page().number === page().start_index || page().num_pages <= 1)>
                   <a href="#" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
+                    <span class="glyphicon glyphicon-fast-backward"></span>
                   </a>
                 </li>
                 <li data-bind="css: { 'disabled': (page().number === page().start_index || page().num_pages <= 1)>
                   <a href="#" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
+                    <span class="glyphicon glyphicon-backward"></span>
                   </a>
                 </li>
                 <li data-bind="css: { 'disabled': (page().number === page().last_index || page().num_pages <= 1)>
                   <a href="#" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
+                    <span class="glyphicon glyphicon-forward"></span>
                   </a>
                 </li>
                 <li data-bind="css: { 'disabled': (page().number === page().last_index || page().num_pages <= 1)>
                   <a href="#" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
+                    <span class="glyphicon glyphicon-fast-forward"></span>
                   </a>
                 </li>
               </ul>
@@ -254,12 +260,21 @@ ${ commonheader(request) | n,unicode }
     </script>
 
      <script id="fileTemplate" type="text/html">
-        <tr>
+        <tr data-bind="click: $root.viewFile">
             <td data-bind="click: handleSelect">
-                <span class="bimCheckbox" data-bind="click: selected, css: {'glyphicon glyphicon-ok' : selected}"></span>
+                <span class="bimCheckbox" data-bind="css: {'glyphicon glyphicon-ok' : selected}"></span>
             </td>
             <td>
                 <span data-bind="text: name"></span>
+            </td>
+            <td>
+                <span data-bind="text: human_size"></span>
+            </td>
+             <td>
+                <span data-bind="text: owner"></span>
+            </td>
+             <td>
+                <span data-bind="text: ctime"></span>
             </td>
         </tr>
     </script>
@@ -272,6 +287,7 @@ ${ commonheader(request) | n,unicode }
         return {
 
             name: file.name,
+            owner: file.owner,
             path: file.path,
             raw_path: file.raw_path,
             isdir: file.isdir,
@@ -293,7 +309,8 @@ ${ commonheader(request) | n,unicode }
       var Breadcrumb = function(breadcrumb) {
         return {
             url: breadcrumb.url,
-            label: breadcrumb.label
+            label: breadcrumb.label,
+
         }
       }
 
@@ -321,10 +338,14 @@ ${ commonheader(request) | n,unicode }
         self.page = ko.observable(new Page(page));
         self.recordsPerPage = ko.observable(30);
         self.targetPageNum = ko.observable(1);
-        self.targetPath = '/project/webform/worker/fb/view/worker'
+        self.targetPath = '/project/webform/worker/fb/view/'
 
         self.files = ko.observableArray(ko.utils.arrayMap(files, function(file){
             new File(file);
+        }));
+
+        self.breadcrumbs = ko.observableArray(ko.utils.arrayMap(breadcrumbs, function(breadcrumbs){
+            return Breadcrumb(breadcrumb);
         }));
 
         self.isLoading = ko.observable(false);
@@ -402,6 +423,11 @@ ${ commonheader(request) | n,unicode }
 
             });
         };
+
+        self.viewFile = function() {
+
+
+        }
 
         self.skipTo = function() {
             console.log('skipTo');

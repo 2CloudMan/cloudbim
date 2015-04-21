@@ -144,3 +144,49 @@ body {
 #fileList span.error {
   color: #990000;
 }
+
+/*
+ * hueBreadcrumb
+ */
+.hueBreadcrumb {
+  font-size: 1.25em;
+  list-style: none outside none;
+  padding: 9px 9px;
+}
+
+.hueBreadcrumb li {
+  display: inline-block;
+  text-shadow: 0 1px 0 #FFFFFF;
+}
+
+.hueBreadcrumb .divider {
+  color: #999999;
+  padding: 0 5px;
+}
+
+.hueBreadcrumb .active a {
+  color: #333333;
+}
+
+.hueBreadcrumb a.nounderline:hover {
+  text-decoration: none;
+}
+
+.hueBreadcrumb > li:last-child > a {
+  font-weight: bold;
+  color: #333333;
+}
+
+.hueBreadcrumb > li:last-child > span {
+  display: none;
+}
+
+.hueBreadcrumbBar {
+  padding: 8px 15px;
+  margin: 0 0 20px;
+  list-style: none;
+}
+
+.hueBreadcrumbBar .upLink {
+ margin-top:6px
+}
