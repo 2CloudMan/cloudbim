@@ -352,6 +352,11 @@ def _make_model_field(label, initial, choices, multi=True):
       field.initial = initial.pk
   return field
 
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+
 class GroupProfileForm(forms.ModelForm):
     class Meta:
         model = GroupProfile  # 为什么是group，这里得注意下

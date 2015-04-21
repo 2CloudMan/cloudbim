@@ -19,7 +19,7 @@ from utils.lib import paginator
 from django.http import HttpResponse
 from hdfs.forms import UploadFileForm, MkDirForm, RmTreeFormSet
 from admin.models import get_project_dir, get_profile, ensure_new_fileinfo,\
-    FileInfo
+    FileInfo, get_user_proj_roles_info
 from admin.views import ensure_project_directory
 
 Log = logging.getLogger(__name__)
@@ -92,11 +92,14 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
         files = [ _massage_stats(request, s, project_home) for s in shown_stats ]
         page = _massage_page(page)
+        proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
         data = \
         {
             #'user' : request.user,
             'curr_proj': proj_slug,
             'curr_role': role_slug,
+            'project': proj_info,
+            'roles': roles_info,
             'path': path,
             'raw_path': hadoop_path,
             'breadcrumbs': breadcrumbs,
@@ -321,7 +324,7 @@ def mkdir(request, proj_slug, role_slug):
 
             return JsonResponse(dict(success=True, code=200))
         else:
-            return JsonResponse(dict(success=False, error=form._errors, code=403))
+            return JsonResponse(dict(success=False, error=form.errors, code=403))
     else:
         result = {"success": False, "error": "request a post method", 'code': 403}
         return JsonResponse(result)

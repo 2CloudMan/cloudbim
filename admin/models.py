@@ -115,7 +115,7 @@ class Project(models.Model):
     created_time = models.DateTimeField(default=timezone.now)
     manager = models.ForeignKey(auth_models.User)
     slug = models.CharField(max_length=60, unique=True)
-    
+
     def __str__(self):
         return "%s:%s" % (self.name, self.slug)
 
@@ -304,6 +304,41 @@ def get_group_profile(group):
         group._cached_userman_profile = profile
         return profile
 
+
+def get_user_proj_roles_info(user, proj):
+    result = dict(project={}, roles=[])
+    if not proj or not isinstance(user, auth_models.User) or not isinstance(proj, Project):
+        return result
+
+    groups = user.groups.all().filter(groupprofile__project=proj)
+    GroupProfile.objects.filter(group__in=groups, project=proj).all()
+    roles = []
+    for group in groups:
+        roles.append(get_role_info(group.groupprofile.role))
+
+    project = get_proj_info(proj)
+    return project, roles
+
+
+def get_proj_info(proj):
+    if not proj:
+        return {} 
+    return {
+            'name': proj.name,
+            'slug': proj.slug,
+            'create_time': proj.created_time,
+            'home_directory': proj.project_directory
+            }
+
+
+def get_role_info(role):
+    if not role:
+        return {}
+    return {
+            'name': role.name,
+            'slug': role.slug,
+            'code': role.pk
+            }
 
 def get_project_dir(project):
     if not project:
