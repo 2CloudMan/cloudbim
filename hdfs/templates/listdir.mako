@@ -19,8 +19,8 @@ ${ commonheader(request) | n,unicode }
                 <li><a href="" class="upLink"><span class="glyphicon glyphicon-arrow-left"></span></a></li>
                 <li>
                     <ul class="hueBreadcrumb" data-bind="foreach: breadcrumbs" style="padding-right:40px; padding-top: 12px">
-                        <li data-bind="visible: label == '/'"><a href="#" data-bind="click: show"><span class="divider" data-bind="text: label"></span></a></li>
-                        <li data-bind="visible: label != '/'"><a href="#" data-bind="text: label, click: show"></a><span class="divider">/</span></li>
+                        <li data-bind="visible: label == '/'"><a href="#" data-bind=""><span class="divider" data-bind="text: label"></span></a></li>
+                        <li data-bind="visible: label != '/'"><a href="#" data-bind="text: label"></a><span class="divider">/</span></li>
                     </ul>
                 </li>
             </ul>
@@ -260,7 +260,7 @@ ${ commonheader(request) | n,unicode }
     </script>
 
      <script id="fileTemplate" type="text/html">
-        <tr>
+        <tr data-bind="click: $root.viewFile">
             <td data-bind="click: handleSelect">
                 <span class="bimCheckbox" data-bind="css: {'glyphicon glyphicon-ok' : selected}"></span>
             </td>
@@ -310,9 +310,7 @@ ${ commonheader(request) | n,unicode }
         return {
             url: breadcrumb.url,
             label: breadcrumb.label,
-            show: function(elem, e) {
-                return this.label != '/'
-            }
+
         }
       }
 
@@ -340,7 +338,7 @@ ${ commonheader(request) | n,unicode }
         self.page = ko.observable(new Page(page));
         self.recordsPerPage = ko.observable(30);
         self.targetPageNum = ko.observable(1);
-        self.targetPath = '/project/webform/worker/fb/view/worker'
+        self.targetPath = '/project/webform/worker/fb/view/'
 
         self.files = ko.observableArray(ko.utils.arrayMap(files, function(file){
             new File(file);
@@ -425,6 +423,11 @@ ${ commonheader(request) | n,unicode }
 
             });
         };
+
+        self.viewFile = function() {
+
+
+        }
 
         self.skipTo = function() {
             console.log('skipTo');
