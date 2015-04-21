@@ -282,7 +282,7 @@ def _upload_file(request):
     else:
         raise PopupException(_("Error in upload form: %s") % (form.errors,))
 
-def mkdir(request):
+def mkdir(request, proj_slug, role_slug):
 
     next = request.GET.get("next", request.POST.get("next", None))
 
@@ -306,6 +306,7 @@ def mkdir(request):
 
             dest = os.path.join(hadoop_path, name)
             try:
+                print dest
                 request.do_as_superuser(request.fs.mkdir, dest)
 
                 # 为文件创建权限

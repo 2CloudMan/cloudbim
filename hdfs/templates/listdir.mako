@@ -129,14 +129,15 @@ ${ commonheader(request) | n,unicode }
             <div class="modal-content">
               <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">创建目录</h4>
+                <h4 class="modal-title" id="myModalLabel">创建目录 in ${path}</h4>
               </div>
 
               <div class="modal-body">
 
-              <form action="">
+              <form id="createDirForm" action="" data-bind="submit: createDirectory" method="post">
                 <label for="dirName">目录名</label>
-                <input type="text" class="form-control" id="dirName" placeholder="">
+                <input id="newDirNameInput" type="text" class="form-control"  name="dir_name" placeholder="">
+                <input type='hidden' class="hidden-field" name="dest" data-bind="value: currentDirPath()" />
                 <button type="submit" class="btn btn-default" style="margin-top: 10px">submit</button>
               </form>
 
@@ -282,6 +283,8 @@ ${ commonheader(request) | n,unicode }
 
     <script type="text/javascript">
 
+
+
       var File = function(file) {
 
         return {
@@ -343,7 +346,8 @@ ${ commonheader(request) | n,unicode }
         self.page = ko.observable(new Page(page));
         self.recordsPerPage = ko.observable(30);
         self.targetPageNum = ko.observable(1);
-        self.targetPath = ko.observable('/project/${curr_proj}/${curr_role}/fb/view${path}')
+        self.basePath = "/project/${curr_proj}/${curr_role}/fb/";
+        self.targetPath = ko.observable(self.basePath + 'view${path}')
 
         self.files = ko.observableArray(ko.utils.arrayMap(files, function(file){
             new File(file);
@@ -364,6 +368,8 @@ ${ commonheader(request) | n,unicode }
         self.selectedFile = ko.computed(function () {
             return self.selectedFiles()[0];
         }, self);
+
+        self.currentDirPath = ko.observable(currentDirPath);
 
         self.selectAll = function() {
 
@@ -406,7 +412,7 @@ ${ commonheader(request) | n,unicode }
               return new Breadcrumb(breadcrumb);
             }));
 
-            //self.currentPath(currentDirPath);
+            self.currentDirPath(currentDirPath);
 
             //$('.uploader').trigger('fb:updatePath', {dest:self.currentPath()});
 
@@ -434,11 +440,18 @@ ${ commonheader(request) | n,unicode }
                 return false;
               }
 
-              self.updateFileList(data.files, data.page, data.breadcrumbs, data.current_dir_path);
+              self.updateFileList(data.files, data.page, data.breadcrumbs, data.path);
 
 
             });
         };
+
+        self.createDirectory = function(formElement) {
+            $(formElement).attr("action", "/project/${curr_proj}/${curr_role}/fb/mkdir" + "?next=" + self.targetPath());
+
+            return true;
+
+        }
 
         self.viewFile = function (file) {
             if (file.isdir) {
@@ -485,7 +498,7 @@ ${ commonheader(request) | n,unicode }
 
             hiddenFields($("#deleteForm"), 'path', paths);
 
-            $("#deleteForm").attr("action", "/filebrowser/rmtree" + "?" +
+            $("#deleteForm").attr("action", "rmtree" + "?" +
               "next=/");
 
             $("#deleteModal").modal({
@@ -519,6 +532,20 @@ ${ commonheader(request) | n,unicode }
 
       $(document).ready(function() {
         viewModel.retrieveData();
+
+        $("#createDirForm").submit(function() {
+
+            var val = $.trim($("#newDirNameInput").val());
+            if(val == "") {
+
+                return false;
+            }
+            //else if(val.search(/[^\w\d]/) > -1) { //TODO: filter illegal character
+            //    return false;
+            //}
+
+            return true;
+        });
       });
 
     </script>
