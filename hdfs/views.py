@@ -67,28 +67,22 @@ def listdir_paged(request, proj_slug, role_slug, path):
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/auth/login')
     
-    # 判断给定的路径是否是在项目所在的目录下
-    project_home = get_project_dir(request.group.groupprofile.project)
-
-    # 检查项目目录是否存在，不存在就创建
-    ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
-
-    hadoo_path = os.path.join(project_home, path[1:])
+    project_home, hadoop_path = get_hadoop_path(request, path)
     # 判断给定路径是否是一个目录
-    if not request.fs.isdir(hadoo_path):
+    if not request.fs.isdir(hadoop_path):
         Log.warn('user %s try to open a dir user the given path %s but it is not a directory!' %
-                (request.user.username, hadoo_path)) 
-        raise PopupException("Not a directory: %s" % (hadoo_path,))
+                (request.user.username, hadoop_path)) 
+        raise PopupException("Not a directory: %s" % (hadoop_path,))
     
     # 用户是否有查看目录的权限
-    if get_profile(request.user).has_file_permission(request.group, hadoo_path, 'r')\
+    if get_profile(request.user).has_file_permission(request.group, hadoop_path, 'r')\
             or request.user.is_superuser:
-        dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, hadoo_path)
+        dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, hadoop_path)
         # Filter
         # 排序
     
         breadcrumbs = parse_breadcrumbs(path)
-        print breadcrumbs
+ 
         # 分页
         pagenum = int(request.GET.get('pagenum', 1))
         pagesize = int(request.GET.get('pagesize', 30))
@@ -104,7 +98,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
             'curr_proj': proj_slug,
             'curr_role': role_slug,
             'path': path,
-            'raw_path': hadoo_path,
+            'raw_path': hadoop_path,
             'breadcrumbs': breadcrumbs,
             'files': files,
             'page' : page,
@@ -130,7 +124,7 @@ def _massage_stats(request, stats, cur_path):
     Massage a stats record as returned by the filesystem implementation
     into the format that the views would like it in.
     """
-    relpath = ''
+    relpath = '/'
     path = stats['path']
     normalized = Hdfs.normpath(path)
 
@@ -138,6 +132,7 @@ def _massage_stats(request, stats, cur_path):
         relpath = '/' + posixpath.relpath(path, cur_path)
         Log.error("Get message stats error: the given current" + 
                         "path is not the parent %s of path%s - stats: %s" % (cur_path, path, stats))
+
     proj_slug = ''
     role_slug = ''
     owner = 'system'
@@ -240,15 +235,8 @@ def _upload_file(request):
         uploaded_file = request.FILES['file']
         dest = form.cleaned_data['dest']
 
-        # 判断给定的路径是否是在项目所在的目录下
-        project_home = get_project_dir(request.group.groupprofile.project)
-    
-        # 检查项目目录是否存在，不存在就创建
-        ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
-    
-        dest = os.path.join(project_home, dest[1:])       
-        print dest
-
+        # 获取路径
+        project_home, dest = get_hadoop_path(request, dest)
 
         if request.fs.isdir(dest) and posixpath.sep in uploaded_file.name:
             raise PopupException(_('Sorry, no "%(sep)s" in the filename %(name)s.' %
@@ -412,3 +400,15 @@ def default_initial_value_extractor(request, parameter_names):
 #             # return something
 #     }
 #     return HttpResponse(data)
+
+def get_hadoop_path(request, path):
+
+    path = Hdfs.normpath(path)
+
+    project_home = get_project_dir(request.group.groupprofile.project)
+
+    # 检查项目目录是否存在，不存在就创建
+    ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
+
+    return project_home, os.path.join(project_home, path[1:])
+    
