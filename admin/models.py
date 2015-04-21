@@ -237,6 +237,21 @@ class BimFilePermission(models.Model):
 
 
 @transaction.commit_manually
+def clear_file_info(path):
+    try:
+        # 删除文件相关权限
+        BimFilePermission.objects.filter(file__path=path).delete()
+
+        # 删除文件信息
+        FileInfo.objects.get(path=path).delete()
+    except Exception as e:
+        LOG.error("File info clear failed! ", exc_info=e) 
+        transaction.rollback()
+    else:
+        transaction.commit()
+
+
+@transaction.commit_manually
 def ensure_new_fileinfo(path, owner, group):
     if FileInfo.objects.filter(path=path).count() > 0:
         return

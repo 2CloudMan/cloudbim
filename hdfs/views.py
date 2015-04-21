@@ -4,11 +4,17 @@ import posixpath
 import stat
 import json
 import logging
+import mimetypes
 from datetime import datetime
 from django.utils.translation import ugettext as _
 from django.http.response import HttpResponse, HttpResponseRedirect
 from django.views.decorators.http import require_http_methods
 from django.template.defaultfilters import filesizeformat
+from django.conf import settings
+from django.http import Http404, HttpResponseNotModified
+from django.utils.http import http_date
+from django.utils.html import escape
+from django.views.static import was_modified_since
 
 from utils.lib.django_util import  format_preserving_redirect, JsonResponse
 from utils.lib.django_util import render
@@ -19,7 +25,7 @@ from utils.lib import paginator
 from django.http import HttpResponse
 from hdfs.forms import UploadFileForm, MkDirForm, RmTreeFormSet
 from admin.models import get_project_dir, get_profile, ensure_new_fileinfo,\
-    FileInfo, get_user_proj_roles_info
+    FileInfo, get_user_proj_roles_info, clear_file_info
 from admin.views import ensure_project_directory
 
 Log = logging.getLogger(__name__)
@@ -468,12 +474,72 @@ def rmtree(request):
 
     def bulk_rmtree(*args, **kwargs):
         for arg in args:
+        # 验证用户权限
+            # 获取文件所在目录的权限
+            dirname = posixpath.dirname(arg['path'])
+            if not request.user.is_superuser or not request.user.has_file_permission(request.group, dirname, 'w'):
+                # do more
+                continue
+            # 如果用户是超级用户或者拥有写文件所在目录的写权限即可删除文件    
             request.fs.do_as_user(request.user, request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
+            
+            # 暂时不能地柜删除文件，所以这里清理信息无需考虑递归清理
+            clear_file_info(arg['path'])
 
     return generic_op(RmTreeFormSet, request, bulk_rmtree, ["path"], None,
                       data_extractor=formset_data_extractor(recurring, params),
                       arg_extractor=formset_arg_extractor,
                       initial_value_extractor=default_initial_value_extractor)
+
+
+def _file_reader(fh):
+    """Generator that reads a file, chunk-by-chunk."""
+    while True:
+        chunk = fh.read(settings.DOWNLOAD_CHUNK_SIZE)
+        if chunk == '':
+            fh.close()
+            break
+        yield chunk
+
+
+def download(request, proj_slug, role_slug, path):
+    """
+    Downloads a file.
+
+    This is inspired by django.views.static.serve.
+    ?disposition={attachment, inline}
+    """
+    path = Hdfs.normpath(path)
+    proj_home, hadoop_path = get_hadoop_path(request, path)
+
+    if not request.fs.exists(hadoop_path):
+        raise Http404(_("File not found: %(path)s.") % {'path': escape(hadoop_path)})
+    if not request.fs.isfile(hadoop_path):
+        raise PopupException(_("'%(path)s' is not a file.") % {'path': hadoop_path})
+
+    if not request.user.is_superuser and \
+            not request.user.has_file_permission(request.group, hadoop_path, 'w'):
+                raise PopupException(_('Permission deny: user %(user) try download  file %(name)s.' 
+                               % {'user': request.user.username, 'name': hadoop_path}))
+ 
+    content_type = mimetypes.guess_type(hadoop_path)[0] or 'application/octet-stream'
+    stats = request.fs.stats(hadoop_path)
+    mtime = stats['mtime']
+    size = stats['size']
+    if not was_modified_since(request.META.get('HTTP_IF_MODIFIED_SINCE'), mtime, size):
+        return HttpResponseNotModified()
+        # TODO(philip): Ideally a with statement would protect from leaks,
+    # but tricky to do here.
+#     fh = request.fs.open(hadoop_path)
+    fh = request.fs.do_as_superuser(request.fs.open, hadoop_path)
+
+    response = HttpResponse(_file_reader(fh), content_type=content_type)
+    response["Last-Modified"] = http_date(stats['mtime'])
+    response["Content-Length"] = stats['size']
+    response['Content-Disposition'] = request.GET.get('disposition', 'attachment')
+    return response
+
+
 
 def get_hadoop_path(request, path):
 

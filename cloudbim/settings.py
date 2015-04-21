@@ -110,6 +110,8 @@ STATIC_URL = '/static/'
 
 HADOOP_PROJECT_DIR='/cloudbim/'
 
+DOWNLOAD_CHUNK_SIZE = 64 * 1024 * 1024 # 64MB
+
 # templates config, define how to import templates.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
