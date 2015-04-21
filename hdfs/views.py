@@ -306,14 +306,14 @@ def mkdir(request, proj_slug, role_slug):
 
             dest = os.path.join(hadoop_path, name)
             try:
-                print dest
-                request.do_as_superuser(request.fs.mkdir, dest)
+                request.fs.do_as_superuser(request.fs.mkdir, dest)
 
                 # 为文件创建权限
                 ensure_new_fileinfo(dest, request.user, request.group)
-            except Exception:
+            except Exception as e:
                 raise PopupException("Mkdir failed!: user %s try to mkdir in path %s" 
                                      % (request.user.username, dest))
+                Log.error("Make dirrectory failed! ", exc_info=e)
             if next:
                 logging.debug("Next: %s" % next)
                 # Doesn't need to be quoted: quoting is done by HttpResponseRedirect.

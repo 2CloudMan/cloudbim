@@ -187,7 +187,7 @@ class BimHbasePermission(models.Model):
         unique_together = (("table", "action"), )
 
     def __str__(self):
-        return "%s.%s:%s(%d)" % (self.table, self.action, self.description, self.pk)
+        return "%s:%s" % (self.table, self.action)
     
     @classmethod
     def get_object_permission(cls, table, action):
@@ -229,7 +229,7 @@ class BimFilePermission(models.Model):
         unique_together = (("file", "action"), )
 
     def __str__(self):
-        return "%s.%s:%s(%d)" % (self.file, self.action, self.description, self.pk)
+        return "%s:%s" % (self.file, self.action)
     
     @classmethod
     def get_object_permission(cls, path, action):
@@ -249,6 +249,7 @@ def ensure_new_fileinfo(path, owner, group):
         # init file permission
         perm = BimFilePermission(file=file, action='rwx',
                                  creator=owner, description='group of file owner')
+        perm.save()
         perm.groups.add(group)
         perm.save()
     except Exception as e:
