@@ -72,50 +72,31 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
     # 检查项目目录是否存在，不存在就创建
     ensure_project_directory(request.fs, request.group.groupprofile.project.slug)
-    print path
-    path = os.path.join(project_home, path[1:])
+
+    hadoo_path = os.path.join(project_home, path[1:])
     # 判断给定路径是否是一个目录
-    if not request.fs.isdir(path):
+    if not request.fs.isdir(hadoo_path):
         Log.warn('user %s try to open a dir user the given path %s but it is not a directory!' %
-                (request.user.username, path)) 
-        raise PopupException("Not a directory: %s" % (path,))
+                (request.user.username, hadoo_path)) 
+        raise PopupException("Not a directory: %s" % (hadoo_path,))
     
     # 用户是否有查看目录的权限
-    if get_profile(request.user).has_file_permission(request.group, path, 'r')\
+    if get_profile(request.user).has_file_permission(request.group, hadoo_path, 'r')\
             or request.user.is_superuser:
+        dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, hadoo_path)
+        # Filter
+        # 排序
+    
+        breadcrumbs = parse_breadcrumbs(path)
+
+        # 分页
         pagenum = int(request.GET.get('pagenum', 1))
         pagesize = int(request.GET.get('pagesize', 30))
-        
-        breadcrumbs = parse_breadcrumbs(path)
-        print path
-        dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, path)
-    # Filter
-    # 排序
-    
-    # 分页
         page = paginator.Paginator(dir_list, pagesize).page(pagenum)
-        shown_stats = page.object_list
-    # 添加父目录
-        # Include parent dir always as second option, unless at filesystem root.
-        if Hdfs.normpath(path) != posixpath.sep:
-            parent_path = request.fs.join(path, "..")
-            parent_stat = request.fs.stats(parent_path)
-            # The 'path' field would be absolute, but we want its basename to be
-            # actually '..' for display purposes. Encode it since _massage_stats expects byte strings.
-            parent_stat['path'] = parent_path
-            parent_stat['name'] = ".."
-            shown_stats.insert(0, parent_stat)
-    
-        # Include same dir always as first option to see stats of the current folder
-        current_stat = request.fs.stats(path)
-        # The 'path' field would be absolute, but we want its basename to be
-        # actually '.' for display purposes. Encode it since _massage_stats expects byte strings.
-        current_stat['path'] = path
-        current_stat['name'] = "."
-        shown_stats.insert(1, current_stat)
-    
-        files = [ _massage_stats(request, s) for s in shown_stats ]
 
+        shown_stats = page.object_list
+
+        files = [ _massage_stats(request, s) for s in shown_stats ]
         page = _massage_page(page)
         data = \
         {
