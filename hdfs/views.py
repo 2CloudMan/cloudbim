@@ -325,15 +325,14 @@ def mkdir(request, proj_slug, role_slug):
     else:
         result = {"success": False, "error": "request a post method", 'code': 403}
         return JsonResponse(result)
-     
-
-
-def default_data_extractor(request):
-    return {'data': request.POST.copy()}
 
 
 def default_arg_extractor(request, form, parameter_names):
     return [form.cleaned_data[p] for p in parameter_names]
+
+
+def default_data_extractor(request):
+    return {'data': request.POST.copy()}
 
 
 def default_initial_value_extractor(request, parameter_names):
@@ -345,7 +344,8 @@ def default_initial_value_extractor(request, parameter_names):
     return initial_values
 
 
-def generic_op(form_class, request, op, parameter_names, piggyback=None, template="fileop.mako", data_extractor=default_data_extractor, arg_extractor=default_arg_extractor, initial_value_extractor=default_initial_value_extractor, extra_params=None):
+def generic_op(form_class, request, op, parameter_names, piggyback=None,
+               template="fileop.mako", data_extractor=default_data_extractor, arg_extractor=default_arg_extractor, initial_value_extractor=default_initial_value_extractor, extra_params=None):
     """
     Generic implementation for several operations.
  
@@ -413,23 +413,64 @@ def generic_op(form_class, request, op, parameter_names, piggyback=None, templat
     return render(template, request, ret)
 
 
-# @require_http_methods(["POST"])
-# def rmtree(request):
-#     """
-#     delete a tree recursively
-#     if skip_trash is true move  file or directory to trash.
-#     Will create a timestamped directory underneath /user/<username>/.Trash.
-#     """
-#     recurring = []
-#     params = ["path"]
-#     def bulk_rmtree(*args, **kwargs):
-#         for arg in args:
-#             request.fs.do_as_user(request.user, request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
-#     
-#     data = {
-#             # return something
-#     }
-#     return HttpResponse(data)
+def formset_arg_extractor(request, formset, parameter_names):
+    data = []
+    for form in formset.forms:
+        data_dict = {}
+        for p in parameter_names:
+            data_dict[p] = form.cleaned_data[p]
+        data.append(data_dict)
+    return data
+
+
+def formset_data_extractor(recurring=[], submitted=[]):
+    """
+    Builds a list of data that formsets should use by extending some fields to every object,
+    whilst others are assumed to be received in order.
+    Formsets should receive data that looks like this: [{'param1': <something>,...}, ...].
+    The formsets should then handle construction on their own.
+    """
+    def _data_extractor(request):
+        if not submitted:
+            return []
+        # Build data with list of in order parameters receive in POST data
+        # Size can be inferred from largest list returned in POST data
+        data = []
+        for param in submitted:
+            i = 0
+            for val in request.POST.getlist(param):
+                if len(data) == i:
+                    data.append({})
+                data[i][param] = val
+                i += 1
+        # Extend every data object with recurring params
+        for kwargs in data:
+            for recurrent in recurring:
+                kwargs[recurrent] = request.POST.get(recurrent)
+        initial = list(data)
+        return {'initial': initial, 'data': data}
+
+    return _data_extractor
+
+
+@require_http_methods(["POST"])
+def rmtree(request):
+    """
+    delete a tree recursively
+    if skip_trash is true move  file or directory to trash.
+    Will create a timestamped directory underneath /user/<username>/.Trash.
+    """
+    recurring = []
+    params = ["path"]
+
+    def bulk_rmtree(*args, **kwargs):
+        for arg in args:
+            request.fs.do_as_user(request.user, request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
+
+    return generic_op(RmTreeFormSet, request, bulk_rmtree, ["path"], None,
+                      data_extractor=formset_data_extractor(recurring, params),
+                      arg_extractor=formset_arg_extractor,
+                      initial_value_extractor=default_initial_value_extractor)
 
 def get_hadoop_path(request, path):
 
