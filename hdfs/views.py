@@ -88,7 +88,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
         # 排序
     
         breadcrumbs = parse_breadcrumbs(path)
-
+        print breadcrumbs
         # 分页
         pagenum = int(request.GET.get('pagenum', 1))
         pagesize = int(request.GET.get('pagesize', 30))
@@ -96,15 +96,15 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
         shown_stats = page.object_list
 
-        files = [ _massage_stats(request, s) for s in shown_stats ]
+        files = [ _massage_stats(request, s, project_home) for s in shown_stats ]
         page = _massage_page(page)
         data = \
         {
             #'user' : request.user,
             'curr_proj': proj_slug,
             'curr_role': role_slug,
-            'path': '',
-            'raw_path': path,
+            'path': path,
+            'raw_path': hadoo_path,
             'breadcrumbs': breadcrumbs,
             'files': files,
             'page' : page,
@@ -125,13 +125,19 @@ def listdir_paged(request, proj_slug, role_slug, path):
     return render('listdir.mako', request, data)
 
 
-def _massage_stats(request, stats):
+def _massage_stats(request, stats, cur_path):
     """
     Massage a stats record as returned by the filesystem implementation
     into the format that the views would like it in.
     """
+    relpath = ''
     path = stats['path']
     normalized = Hdfs.normpath(path)
+
+    if path.startswith(cur_path):
+        relpath = '/' + posixpath.relpath(path, cur_path)
+        Log.error("Get message stats error: the given current" + 
+                        "path is not the parent %s of path%s - stats: %s" % (cur_path, path, stats))
     proj_slug = ''
     role_slug = ''
     owner = 'system'
@@ -140,19 +146,18 @@ def _massage_stats(request, stats):
         owner = file.owner.username
     except FileInfo.DoesNotExist:
         Log.warn("Can't find file info of File %s" % path)
-#     except Exception as e:
-#         Log.error("get file info except: path - %s" % path)
+
     return {
         'name': stats['name'],
-        'path': '',
+        'path': relpath,
         'owner': owner,
         'raw_path': normalized,
         'permission': '???',
         'human_size': filesizeformat(stats['size']),
         'project': proj_slug,
         'role':  role_slug,
-        'ctime': '',#datetime.fromtimestamp(stats['mtime']).strftime('%B %d, %Y %I:%M %p'),
-        'atime': '',#datetime.fromtimestamp(stats['atime']).strftime('%B %d, %Y %I:%M %p'),
+        'ctime': datetime.fromtimestamp(stats['mtime']).strftime('%Y-%m-%d %H:%M:%S'),
+        'atime': datetime.fromtimestamp(stats['atime']).strftime('%Y-%m-%d %H:%M:%S'),
         'isdir': stat.S_ISDIR(stats['mode']),
     }
 
@@ -281,7 +286,7 @@ def _upload_file(request):
 
         response.update({
           'path': dest,
-          'result': _massage_stats(request, request.fs.stats(dest)),
+          'result': _massage_stats(request, request.fs.stats(dest), project_home),
           'next': request.GET.get("next")
         })
 
@@ -289,20 +294,20 @@ def _upload_file(request):
     else:
         raise PopupException(_("Error in upload form: %s") % (form.errors,))
 
-def mkdir(request):
-    def smart_mkdir(path, name):
-        # Make sure only one directory is specified at a time.
-        # No absolute directory specification allowed.
-        if posixpath.sep in name or "#" in name:
-            raise PopupException(_("Could not name folder \"%s\": Slashes or hashes are not allowed in filenames." % name))
- 
-        path = os.path.join(path, name)
-        request.fs.do_as_superuser(request.fs.mkdir, path)
-        
-        # create file info
-        ensure_new_fileinfo(path, request.user, request.group)
-
-    return generic_op(MkDirForm, request, smart_mkdir, ["path", "name"], "path")
+# def mkdir(request):
+#     def smart_mkdir(path, name):
+#         # Make sure only one directory is specified at a time.
+#         # No absolute directory specification allowed.
+#         if posixpath.sep in name or "#" in name:
+#             raise PopupException(_("Could not name folder \"%s\": Slashes or hashes are not allowed in filenames." % name))
+#  
+#         path = os.path.join(path, name)
+#         request.fs.do_as_superuser(request.fs.mkdir, path)
+#         
+#         # create file info
+#         ensure_new_fileinfo(path, request.user, request.group)
+# 
+#     return generic_op(MkDirForm, request, smart_mkdir, ["path", "name"], "path")
 
 
 def default_data_extractor(request):
@@ -322,72 +327,72 @@ def default_initial_value_extractor(request, parameter_names):
     return initial_values
 
 
-def generic_op(form_class, request, op, parameter_names, piggyback=None, template="fileop.mako", data_extractor=default_data_extractor, arg_extractor=default_arg_extractor, initial_value_extractor=default_initial_value_extractor, extra_params=None):
-    """
-    Generic implementation for several operations.
-
-    @param form_class form to instantiate
-    @param request incoming request, used for parameters
-    @param op callable with the filesystem operation
-    @param parameter_names list of form parameters that are extracted and then passed to op
-    @param piggyback list of form parameters whose file stats to look up after the operation
-    @param data_extractor function that extracts POST data to be used by op
-    @param arg_extractor function that extracts args from a given form or formset
-    @param initial_value_extractor function that extracts the initial values of a form or formset
-    @param extra_params dictionary of extra parameters to send to the template for rendering
-    """
-    # Use next for non-ajax requests, when available.
-    next = request.GET.get("next", request.POST.get("next", None))
-
-    ret = dict({
-        'next': next
-    })
-
-    if extra_params is not None:
-        ret['extra_params'] = extra_params
-
-    for p in parameter_names:
-        val = request.REQUEST.get(p)
-        if val:
-            ret[p] = val
-
-    if request.method == 'POST':
-        form = form_class(**data_extractor(request))
-        ret['form'] = form
-        if form.is_valid():
-            args = arg_extractor(request, form, parameter_names)
-            try:
-                op(*args)
-            except (IOError, WebHdfsException), e:
-                msg = _("Cannot perform operation.")
-                if request.user.is_superuser and not request.user == request.fs.superuser:
-                    msg += _(' Note: you are a Hue admin but not a HDFS superuser (which is "%(superuser)s").') \
-                           % {'superuser': request.fs.superuser}
-                raise PopupException(msg, detail=e)
-            if next:
-                logging.debug("Next: %s" % next)
-                # Doesn't need to be quoted: quoting is done by HttpResponseRedirect.
-                return format_preserving_redirect(request, next)
-            ret["success"] = True
-            try:
-                if piggyback:
-                    piggy_path = form.cleaned_data[piggyback]
-                    ret["result"] = _massage_stats(request, request.fs.stats(piggy_path))
-            except Exception, e:
-                # Hard to report these more naturally here.  These happen either
-                # because of a bug in the piggy-back code or because of a
-                # race condition.
-                Log.exception("Exception while processing piggyback data")
-                ret["result_error"] = True
-
-            ret['user'] = request.user
-            return render(template, request, ret)
-    else:
-        # Initial parameters may be specified with get with the default extractor
-        initial_values = initial_value_extractor(request, parameter_names)
-        formset = form_class(initial=initial_values)
-        ret['form'] = formset
-    return render(template, request, ret)
+# def generic_op(form_class, request, op, parameter_names, piggyback=None, template="fileop.mako", data_extractor=default_data_extractor, arg_extractor=default_arg_extractor, initial_value_extractor=default_initial_value_extractor, extra_params=None):
+#     """
+#     Generic implementation for several operations.
+# 
+#     @param form_class form to instantiate
+#     @param request incoming request, used for parameters
+#     @param op callable with the filesystem operation
+#     @param parameter_names list of form parameters that are extracted and then passed to op
+#     @param piggyback list of form parameters whose file stats to look up after the operation
+#     @param data_extractor function that extracts POST data to be used by op
+#     @param arg_extractor function that extracts args from a given form or formset
+#     @param initial_value_extractor function that extracts the initial values of a form or formset
+#     @param extra_params dictionary of extra parameters to send to the template for rendering
+#     """
+#     # Use next for non-ajax requests, when available.
+#     next = request.GET.get("next", request.POST.get("next", None))
+# 
+#     ret = dict({
+#         'next': next
+#     })
+# 
+#     if extra_params is not None:
+#         ret['extra_params'] = extra_params
+# 
+#     for p in parameter_names:
+#         val = request.REQUEST.get(p)
+#         if val:
+#             ret[p] = val
+# 
+#     if request.method == 'POST':
+#         form = form_class(**data_extractor(request))
+#         ret['form'] = form
+#         if form.is_valid():
+#             args = arg_extractor(request, form, parameter_names)
+#             try:
+#                 op(*args)
+#             except (IOError, WebHdfsException), e:
+#                 msg = _("Cannot perform operation.")
+#                 if request.user.is_superuser and not request.user == request.fs.superuser:
+#                     msg += _(' Note: you are a Hue admin but not a HDFS superuser (which is "%(superuser)s").') \
+#                            % {'superuser': request.fs.superuser}
+#                 raise PopupException(msg, detail=e)
+#             if next:
+#                 logging.debug("Next: %s" % next)
+#                 # Doesn't need to be quoted: quoting is done by HttpResponseRedirect.
+#                 return format_preserving_redirect(request, next)
+#             ret["success"] = True
+#             try:
+#                 if piggyback:
+#                     piggy_path = form.cleaned_data[piggyback]
+#                     ret["result"] = _massage_stats(request, request.fs.stats(piggy_path))
+#             except Exception, e:
+#                 # Hard to report these more naturally here.  These happen either
+#                 # because of a bug in the piggy-back code or because of a
+#                 # race condition.
+#                 Log.exception("Exception while processing piggyback data")
+#                 ret["result_error"] = True
+# 
+#             ret['user'] = request.user
+#             return render(template, request, ret)
+#     else:
+#         # Initial parameters may be specified with get with the default extractor
+#         initial_values = initial_value_extractor(request, parameter_names)
+#         formset = form_class(initial=initial_values)
+#         ret['form'] = formset
+#     return render(template, request, ret)
 
 
 # @require_http_methods(["POST"])
