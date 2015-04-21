@@ -142,8 +142,8 @@ class TrashPurgeForm(forms.Form):
 
 class MkDirForm(forms.Form):
   op = "mkdir"
-  path = PathField(label=_("Path in which to create the directory"))
-  name = PathField(label=_("Directory Name"))
+  dest = PathField(label=_("Path in which to create the directory"))
+  dir_name = PathField(label=_("Directory Name"))
 
 class TouchForm(forms.Form):
   op = "touch"

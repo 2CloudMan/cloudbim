@@ -240,6 +240,7 @@ class BimFilePermission(models.Model):
 def ensure_new_fileinfo(path, owner, group):
     if FileInfo.objects.filter(path=path).count() > 0:
         return
+
     try:
         # create file info
         file = FileInfo(path=path, owner=owner, group=group)

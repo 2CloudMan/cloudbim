@@ -282,20 +282,49 @@ def _upload_file(request):
     else:
         raise PopupException(_("Error in upload form: %s") % (form.errors,))
 
-# def mkdir(request):
-#     def smart_mkdir(path, name):
-#         # Make sure only one directory is specified at a time.
-#         # No absolute directory specification allowed.
-#         if posixpath.sep in name or "#" in name:
-#             raise PopupException(_("Could not name folder \"%s\": Slashes or hashes are not allowed in filenames." % name))
-#  
-#         path = os.path.join(path, name)
-#         request.fs.do_as_superuser(request.fs.mkdir, path)
-#         
-#         # create file info
-#         ensure_new_fileinfo(path, request.user, request.group)
-# 
-#     return generic_op(MkDirForm, request, smart_mkdir, ["path", "name"], "path")
+def mkdir(request):
+
+    next = request.GET.get("next", request.POST.get("next", None))
+
+    if request.method == 'POST':
+        form = MkDirForm(request.POST)
+        if form.is_valid():
+            path = form.cleaned_data['dest']
+            name = form.cleaned_data['dir_name']
+            
+            proj_home, hadoop_path = get_hadoop_path(request, path)
+
+            if posixpath.sep in name or '#' in name:
+                raise PopupException(_("Could not name folder \"%s\": " + 
+                                       "Slashes or hashes are not allowed in filenames." % name))
+
+            # 权限验证
+            if not request.user.is_superuser and\
+                    not request.user.has_file_permission(request.group, hadoop_path, 'w'):
+                raise PopupException(_('Permission deny: user %(user) try mkdir  %(name)s to destination %(dest).' 
+                                       % {'user': request.user.username, 'name': name, 'dest': path}))
+
+            dest = os.path.join(hadoop_path, name)
+            try:
+                request.do_as_superuser(request.fs.mkdir, dest)
+
+                # 为文件创建权限
+                ensure_new_fileinfo(dest, request.user, request.group)
+            except Exception:
+                raise PopupException("Mkdir failed!: user %s try to mkdir in path %s" 
+                                     % (request.user.username, dest))
+            if next:
+                logging.debug("Next: %s" % next)
+                # Doesn't need to be quoted: quoting is done by HttpResponseRedirect.
+                return format_preserving_redirect(request, next)
+
+            return JsonResponse(dict(success=True, code=200))
+        else:
+            return JsonResponse(dict(success=False, error=form._errors, code=403))
+    else:
+        result = {"success": False, "error": "request a post method", 'code': 403}
+        return JsonResponse(result)
+     
 
 
 def default_data_extractor(request):
@@ -315,72 +344,72 @@ def default_initial_value_extractor(request, parameter_names):
     return initial_values
 
 
-# def generic_op(form_class, request, op, parameter_names, piggyback=None, template="fileop.mako", data_extractor=default_data_extractor, arg_extractor=default_arg_extractor, initial_value_extractor=default_initial_value_extractor, extra_params=None):
-#     """
-#     Generic implementation for several operations.
-# 
-#     @param form_class form to instantiate
-#     @param request incoming request, used for parameters
-#     @param op callable with the filesystem operation
-#     @param parameter_names list of form parameters that are extracted and then passed to op
-#     @param piggyback list of form parameters whose file stats to look up after the operation
-#     @param data_extractor function that extracts POST data to be used by op
-#     @param arg_extractor function that extracts args from a given form or formset
-#     @param initial_value_extractor function that extracts the initial values of a form or formset
-#     @param extra_params dictionary of extra parameters to send to the template for rendering
-#     """
-#     # Use next for non-ajax requests, when available.
-#     next = request.GET.get("next", request.POST.get("next", None))
-# 
-#     ret = dict({
-#         'next': next
-#     })
-# 
-#     if extra_params is not None:
-#         ret['extra_params'] = extra_params
-# 
-#     for p in parameter_names:
-#         val = request.REQUEST.get(p)
-#         if val:
-#             ret[p] = val
-# 
-#     if request.method == 'POST':
-#         form = form_class(**data_extractor(request))
-#         ret['form'] = form
-#         if form.is_valid():
-#             args = arg_extractor(request, form, parameter_names)
-#             try:
-#                 op(*args)
-#             except (IOError, WebHdfsException), e:
-#                 msg = _("Cannot perform operation.")
-#                 if request.user.is_superuser and not request.user == request.fs.superuser:
-#                     msg += _(' Note: you are a Hue admin but not a HDFS superuser (which is "%(superuser)s").') \
-#                            % {'superuser': request.fs.superuser}
-#                 raise PopupException(msg, detail=e)
-#             if next:
-#                 logging.debug("Next: %s" % next)
-#                 # Doesn't need to be quoted: quoting is done by HttpResponseRedirect.
-#                 return format_preserving_redirect(request, next)
-#             ret["success"] = True
-#             try:
-#                 if piggyback:
-#                     piggy_path = form.cleaned_data[piggyback]
-#                     ret["result"] = _massage_stats(request, request.fs.stats(piggy_path))
-#             except Exception, e:
-#                 # Hard to report these more naturally here.  These happen either
-#                 # because of a bug in the piggy-back code or because of a
-#                 # race condition.
-#                 Log.exception("Exception while processing piggyback data")
-#                 ret["result_error"] = True
-# 
-#             ret['user'] = request.user
-#             return render(template, request, ret)
-#     else:
-#         # Initial parameters may be specified with get with the default extractor
-#         initial_values = initial_value_extractor(request, parameter_names)
-#         formset = form_class(initial=initial_values)
-#         ret['form'] = formset
-#     return render(template, request, ret)
+def generic_op(form_class, request, op, parameter_names, piggyback=None, template="fileop.mako", data_extractor=default_data_extractor, arg_extractor=default_arg_extractor, initial_value_extractor=default_initial_value_extractor, extra_params=None):
+    """
+    Generic implementation for several operations.
+ 
+    @param form_class form to instantiate
+    @param request incoming request, used for parameters
+    @param op callable with the filesystem operation
+    @param parameter_names list of form parameters that are extracted and then passed to op
+    @param piggyback list of form parameters whose file stats to look up after the operation
+    @param data_extractor function that extracts POST data to be used by op
+    @param arg_extractor function that extracts args from a given form or formset
+    @param initial_value_extractor function that extracts the initial values of a form or formset
+    @param extra_params dictionary of extra parameters to send to the template for rendering
+    """
+    # Use next for non-ajax requests, when available.
+    next = request.GET.get("next", request.POST.get("next", None))
+ 
+    ret = dict({
+        'next': next
+    })
+ 
+    if extra_params is not None:
+        ret['extra_params'] = extra_params
+ 
+    for p in parameter_names:
+        val = request.REQUEST.get(p)
+        if val:
+            ret[p] = val
+ 
+    if request.method == 'POST':
+        form = form_class(**data_extractor(request))
+        ret['form'] = form
+        if form.is_valid():
+            args = arg_extractor(request, form, parameter_names)
+            try:
+                op(*args)
+            except (IOError, WebHdfsException), e:
+                msg = _("Cannot perform operation.")
+                if request.user.is_superuser and not request.user == request.fs.superuser:
+                    msg += _(' Note: you are a Hue admin but not a HDFS superuser (which is "%(superuser)s").') \
+                           % {'superuser': request.fs.superuser}
+                raise PopupException(msg, detail=e)
+            if next:
+                logging.debug("Next: %s" % next)
+                # Doesn't need to be quoted: quoting is done by HttpResponseRedirect.
+                return format_preserving_redirect(request, next)
+            ret["success"] = True
+            try:
+                if piggyback:
+                    piggy_path = form.cleaned_data[piggyback]
+                    ret["result"] = _massage_stats(request, request.fs.stats(piggy_path))
+            except Exception, e:
+                # Hard to report these more naturally here.  These happen either
+                # because of a bug in the piggy-back code or because of a
+                # race condition.
+                Log.exception("Exception while processing piggyback data")
+                ret["result_error"] = True
+ 
+            ret['user'] = request.user
+            return render(template, request, ret)
+    else:
+        # Initial parameters may be specified with get with the default extractor
+        initial_values = initial_value_extractor(request, parameter_names)
+        formset = form_class(initial=initial_values)
+        ret['form'] = formset
+    return render(template, request, ret)
 
 
 # @require_http_methods(["POST"])
