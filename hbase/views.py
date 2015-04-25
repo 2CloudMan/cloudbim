@@ -47,7 +47,7 @@ def app(request, proj_slug, role_slug):
   })
 
 # action/cluster/arg1/arg2/arg3...
-def api_router(request, url): # On split, deserialize anything
+def api_router(request, proj_slug, role_slug, url): # On split, deserialize anything
 
   def safe_json_load(raw):
     try:

@@ -1,87 +1,18 @@
-## Licensed to Cloudera, Inc. under one
-## or more contributor license agreements.  See the NOTICE file
-## distributed with this work for additional information
-## regarding copyright ownership.  Cloudera, Inc. licenses this file
-## to you under the Apache License, Version 2.0 (the
-## "License"); you may not use this file except in compliance
-## with the License.  You may obtain a copy of the License at
-##
-##     http://www.apache.org/licenses/LICENSE-2.0
-##
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
 <%!
-  from utils.views import commonheader, commonfooter
-  from django.utils.translation import ugettext as _
+from utils.views import commonheader, commonfooter
 %>
 
-<%namespace name="actionbar" file="actionbar.mako" />
+<%namespace name="sub" file="sub_header.mako"/>
 
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+${ commonheader(request) | n,unicode }
 
-        <link rel="icon" href="../../favicon.ico">
+<div class="container">
 
-        <title>CloudBIM</title>
-
-        <link href="${ static('hbase/ext/css/font-awesome.min.css') }" rel="stylesheet">
-        <link href="${ static('ext/css/codemirror.css') }" rel="stylesheet">
-        <link href="${ static('ext/css/bootplus.min.css') }" rel="stylesheet">
-        <link href="${ static('hbase/css/hbase.css') }" rel="stylesheet" type="text/css" />
-
-        <script src="${ static('ext/js/jquery-2.1.1.js') }"></script>
-        <script src="${ static('ext/js/jquery.pjax.js') }"></script>
-        <script src="${ static('ext/js/dmuploader.min.js') }"></script>
-        <script src="${ static('ext/js/fileuploader.js') }"></script>
-        <script src="${ static('ext/js/jquery.rowselector.js') }"></script>
-        <script src="${ static('ext/js/jquery.dataTables.1.8.2.min.js') }"></script>
-        <script src="${ static('ext/js/knockout-min.js')}" type='text/javascript'></script>
-        <script src="${ static('ext/js/knockout.mapping-2.3.2.js')}" type='text/javascript'></script>
-
-        <script src="${ static('js/cloudbim.js') }"></script>
-        <script src="${ static('ext/js/bootstrap.js') }"></script>
-
-
-
-    </head>
-<body>
-
-    <nav class="nav navbar-inverse navbar-fixed-top">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="#">
-                    CloudBIM
-                </a>
-            </div>
-
-        </div>
-    </nav>
-
-
-
-
-<div class="navbar navbar-inverse navbar-fixed-top nokids">
-    <div class="navbar-inner">
-    <div class="container-fluid">
-      <div class="nav-collapse">
-        <ul class="nav">
-          <li class="currentApp">
-            <a href="#">
-              <img src="${ static('hbase/art/icon_hbase_48.png') }" class="app-icon" />
-              ${ _('HBase Browser') }
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
+<div>
+   ${ sub.showSubMenu({'name': 'webform'}, 'worker', [], 'tb')}
 </div>
+
+<link href="${ static('hbase/css/hbase.css') }" rel="stylesheet" type="text/css" />
 
 <%def name="datatable(datasource,rowTemplate = 'itemTemplate')">
   <table data-datasource="${datasource}" class="table table-striped table-condensed datatables tablescroller-disable" style="padding-left: 0;padding-right: 0">
@@ -171,7 +102,7 @@
   </div>
 </%def>
 
-<div class="container-fluid">
+<div class="">
   <div class="card card-small">
   <!-- Page Header -->
   <h1 class="card-heading simple">
@@ -516,9 +447,7 @@ function i18n(text) {
 
 canWrite = ${ str(can_write).lower() };
 </script>
-<link ref="${static('ext/css/bootplus.min.css')}" type="text/css">
 
-<script src="${ static('ext/js/bootstrap.min.js') }" type="text/javascript" charset="utf-8"></script>
 
 
 <script src="${ static('ext/js/jquery.total-storage.min.js') }" type="text/javascript" charset="utf-8"></script>
@@ -538,4 +467,11 @@ canWrite = ${ str(can_write).lower() };
 <script src="${ static('hbase/js/nav.js') }" type="text/javascript" charset="utf-8"></script>
 <script src="${ static('hbase/js/app.js') }" type="text/javascript" charset="utf-8"></script>
 
+<script type="text/javascript" charset="urt-8">
+    $(document).ready(function() {
+        //url_prefix="/project/webform/worker/tb"
+    });
+</script>
+
+</div>
 ${ commonfooter() | n,unicode }

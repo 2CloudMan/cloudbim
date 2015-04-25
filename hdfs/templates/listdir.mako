@@ -6,36 +6,40 @@ from utils.views import commonheader, commonfooter
 
 ${ commonheader(request) | n,unicode }
 
-<div data-pjax>
+<div class="container">
 
     <div>
         ${ sub.showSubMenu(project, curr_role, roles, 'fb')}
     </div>
 
+    <div class="card">
     <div class="container" id="pjax-container">
         <div class="row">
-            <div class="col col-lg-6">
-            <ul class="nav nav-pills hueBreadcrumbBar">
-                <li data-bind="css:{'disabled': breadcrumbs().length == 1}"><a href="" class="upLink" data-bind="click: folderUp"><span class="glyphicon glyphicon-arrow-left"></span></a></li>
-                <li>
-                    <ul class="hueBreadcrumb" data-bind="foreach: breadcrumbs" style="padding-right:40px; padding-top: 12px">
-                        <li data-bind="visible: label == '/'"><a href="" data-bind="click: show"><span class="divider" data-bind="text: label"></span></a></li>
-                        <li data-bind="visible: label != '/'"><a href="" data-bind="text: label, click: show"></a><span class="divider">/</span></li>
-                    </ul>
-                </li>
-            </ul>
-            </div>
-            <div class="col col-lg-2" style="padding:12px 0">
-            <button class="btn btn-default" data-toggle="modal" data-target="#uploadFileModal">+f</button>
-            <button class="btn btn-default" data-toggle="modal" data-target="#createDirModal">+d</button>
-            </div>
+                <ul class="nav nav-pills hueBreadcrumbBar">
+                    <li style="padding-left:20px" data-bind="css:{'disabled': breadcrumbs().length == 1}"><a href="" class="upLink" data-bind="click: folderUp"><i class="fa fa-arrow-left"></i></a></li>
+                    <li>
+                        <ul class="hueBreadcrumb" data-bind="foreach: breadcrumbs">
+                            <li data-bind="visible: label == '/'"><a href="" data-bind="click: show"><span class="divider" data-bind="text: label"></span></a></li>
+                            <li data-bind="visible: label != '/'"><a href="" data-bind="text: label, click: show"></a><span class="divider">/</span></li>
+                        </ul>
+                    </li>
+                    <li class="pull-right">
+                        <a href="#uploadFileModal" role="button" data-toggle="modal">AddFile</a>
+                    </li>
+                    <li class="pull-right">
+                        <a href="#createDirModal" role="button" data-toggle="modal">CreateDir</a>
+                    </li>
+                </ul>
+
         </div>
+
+        <div class="content" style="padding:20px">
 
         <table class="table table-striped">
             <thead>
                 <tr>
                     <td width="1%">
-                    <span class="bimCheckbox" data-bind="click: selectAll, css: {'glyphicon glyphicon-ok' : allSelected}"><span>
+                    <i class="bimCheckbox" data-bind="click: selectAll, css: {'fa fa-check' : allSelected}"><i/>
                     </td>
                     <td><strong>Name</strong></td>
                     <td><strong>Size</strong></td>
@@ -56,30 +60,30 @@ ${ commonheader(request) | n,unicode }
 
 
         <div>
-            <nav>
-              <ul class="pagination pull-right">
+            <div class="pagination pull-right">
+              <ul>
                 <li data-bind="css: { 'disabled': (page().number === page().previous_page_number || page().num_pages <= 1)}">
                   <a href="#" aria-label="First">
-                    <span class="glyphicon glyphicon-fast-backward"></span>
+                    <i class="fa fa-fast-backward"></i>
                   </a>
                 </li>
                 <li data-bind="css: { 'disabled': (page().number === page().previous_page_number || page().num_pages <= 1)}">
                   <a href="#" aria-label="Previous">
-                    <span class="glyphicon glyphicon-backward"></span>
+                   <i class="fa fa-backward"></i>
                   </a>
                 </li>
                 <li data-bind="css: { 'disabled': (page().number === page().num_pages)}">
                   <a href="#" aria-label="Next">
-                    <span class="glyphicon glyphicon-forward"></span>
+                    <i class="fa fa-forward"></i>
                   </a>
                 </li>
                 <li data-bind="css: { 'disabled': (page().number === page().num_pages)}">
                   <a href="#" aria-label="Last">
-                    <span class="glyphicon glyphicon-fast-forward"></span>
+                    <i class="fa fa-fast-forward"></i>
                   </a>
                 </li>
               </ul>
-            </nav>
+            </div>
 
             <div class="form-inline pagination-input-form inline pull-right" style="margin: 20px 10px;">
               <span>${_('Page')}</span>
@@ -91,16 +95,13 @@ ${ commonheader(request) | n,unicode }
 
 
         <!-- 上传模块 -->
-        <div class="modal fade" id="uploadFileModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">上传至: ${path}</h4>
-              </div>
+        <div id="uploadFileModal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">上传至: ${path}</h4>
+          </div>
 
-              <div class="modal-body">
-
+          <div class="modal-body">
               <div id="drag-and-drop-zone" class="uploader">
                   <div>Drag &amp; Drop Images Here</div>
                   <div class="or">-or-</div>
@@ -115,37 +116,26 @@ ${ commonheader(request) | n,unicode }
               <div id="fileList">
                 <!-- Files will be places here -->
               </div>
-
-              </div>
-              <div class="modal-footer">
-              </div>
-            </div>
           </div>
+          <div class="modal-footer"></div>
         </div>
 
         <!-- 新建目录模块 -->
         <div class="modal fade" id="createDirModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
               <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="myModalLabel">创建目录 in ${path}</h4>
               </div>
-
               <div class="modal-body">
-
-              <form id="createDirForm" action="" data-bind="submit: createDirectory" method="post">
-                <label for="dirName">目录名</label>
-                <input id="newDirNameInput" type="text" class="form-control"  name="dir_name" placeholder="">
-                <input type='hidden' class="hidden-field" name="dest" data-bind="value: currentDirPath()" />
-                <button type="submit" class="btn btn-default" style="margin-top: 10px">submit</button>
-              </form>
-
+                  <form id="createDirForm" action="" data-bind="submit: createDirectory" method="post">
+                    <label for="dirName">目录名</label>
+                    <input id="newDirNameInput" type="text" class="form-control"  name="dir_name" placeholder="">
+                    <input type='hidden' class="hidden-field" name="dest" data-bind="value: currentDirPath()" />
+                    <button type="submit" class="btn btn-default">submit</button>
+                  </form>
               </div>
               <div class="modal-footer">
               </div>
-            </div>
-          </div>
         </div>
 
         <!-- 删除模块 -->
@@ -170,7 +160,7 @@ ${ commonheader(request) | n,unicode }
             </div>
           </div>
         </div>
-
+        </div>
 
 
     <script type="text/javascript">
@@ -263,7 +253,7 @@ ${ commonheader(request) | n,unicode }
      <script id="fileTemplate" type="text/html">
         <tr data-bind="click: $root.viewFile">
             <td data-bind="click: handleSelect">
-                <span class="bimCheckbox" data-bind="css: {'glyphicon glyphicon-ok' : selected}"></span>
+                <i class="bimCheckbox" data-bind="css: {'fa fa-check' : selected}"></i>
             </td>
             <td>
                 <span data-bind="text: name"></span>
@@ -554,3 +544,4 @@ ${ commonheader(request) | n,unicode }
 
 </div>
 
+${commonfooter() | n, unicode}
