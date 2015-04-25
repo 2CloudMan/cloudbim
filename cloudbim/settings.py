@@ -200,6 +200,7 @@ HBASE_QUERY_PERM = 'q'
 HBASE_INSERT_PERM = 'i'
 HBASE_DELETE_PERM = 'd'
 
+NEED_PERMISSION=False
 # Keep default values up to date
 TEMPLATE_CONTEXT_PROCESSORS = (
   'django.contrib.auth.context_processors.auth',

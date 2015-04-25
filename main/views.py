@@ -46,8 +46,9 @@ def listproj_paged(request) :
         return HttpResponseRedirect('/auth/login')
 
 def showproj(request, proj_slug) :
-
-    return HttpResponseRedirect('/project/' + proj_slug + '/designer/')
+    role = get_profile(request.user).get_user_first_role(proj_slug)
+    slug = role.slug
+    return HttpResponseRedirect('/project/' + proj_slug + '/' + slug + '/')
 
 def show(request, proj_slug, role_slug) :
 

@@ -35,7 +35,7 @@ from hbase.settings import DJANGO_APPS
 from hbase.api import HbaseApi
 from hbase.management.commands import hbase_setup
 from server.hbase_lib import get_thrift_type
-from admin.models import ensuire_table_info, get_group_table_permission
+from admin.models import ensuire_table_info, get_group_table_permission, get_profile
 
 LOG = logging.getLogger(__name__)
 
@@ -88,13 +88,14 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
                 for arg in decoded_url_params] # Deserialize later
 
    # 操作权限验证
-  action = url_params[0]
-  need_perm = action_perm_required(action)
-  tablename = url_params[2] if len(url_params) > 2 else None
-  if not request.user.userprofile_set.first().has_hbase_permission(request.group, tablename, need_perm):
-    LOG.info('Permission deny! : user %s try to %s table %s' %
-                          (request.user.username, action, tablename))
-    return JsonResponse({'error': 'Permission deny!'}, status=403)
+  if settings.NEED_PERMISSION:
+    action = url_params[0]
+    need_perm = action_perm_required(action)
+    tablename = url_params[2] if len(url_params) > 2 else None
+    if not get_profile(request.user).has_hbase_permission(request.group, tablename, need_perm):
+      LOG.info('Permission deny! : user %s try to %s table %s' %
+                            (request.user.username, action, tablename))
+      return JsonResponse({'error': 'Permission deny!'}, status=403)
  
 #   # create or clear table info when needed
 #   ensuire_table_info(request.user, tablename, request.group, action)
@@ -106,7 +107,7 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
   result = HbaseApi(request.user).query(*url_params)
   
   # create table info when call method createTable
-  if action == 'createTable':
+  if settings.NEED_PERMISSION and action == 'createTable':
     ensuire_table_info(request.user, tablename, request.group, action)
 
   return api_dump(result)

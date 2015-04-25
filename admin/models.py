@@ -122,10 +122,16 @@ class UserProfile(models.Model):
         groups = self.get_groups()
         roles = set()
         for group in groups:
-            if group.groupprofile.project.slug is proj_slug:
-                roles.add(group.groupprofile.role)
+            profile = get_group_profile(group)
+            if profile.project.slug is proj_slug:
+                roles.add(profile.role)
         return list(roles)
 
+    def get_user_first_role(self, proj_slug):
+        first_grp = self.user.groups.filter(groupprofile__project__slug=proj_slug).first()
+        if first_grp:
+            return get_group_profile(first_grp).role
+        return None
 
 class Project(models.Model):
     name = models.CharField(max_length=80, unique=True)

@@ -477,7 +477,9 @@ def rmtree(request, proj_slug, role_slug):
         # 验证用户权限
             # 获取文件所在目录的权限
             dirname = posixpath.dirname(arg['path'])
-            if not request.user.is_superuser or not request.user.has_file_permission(request.group, dirname, 'w'):
+            print dirname
+            print arg['path']
+            if not request.user.is_superuser or not get_profile(request.user).has_file_permission(request.group, dirname, 'w'):
                 # do more
                 continue
             # 如果用户是超级用户或者拥有写文件所在目录的写权限即可删除文件    
