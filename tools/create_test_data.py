@@ -80,3 +80,9 @@ def admin_init(group_detail):
 def all_init():
     for item in DATA_STRUCT:
         admin_init(item)
+
+
+if __name__ == "__main__":
+    print 'Data initial starting!'
+    all_init()
+    print 'Finish!'

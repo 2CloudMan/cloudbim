@@ -29,7 +29,7 @@ DEBUG = True
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -194,6 +194,11 @@ AUTHENTICATION_BACKENDS = (utils.conf.AUTH.BACKEND.get(),)
 if utils.conf.DEMO_ENABLED.get():
   AUTHENTICATION_BACKENDS = ('auth.backend.DemoBackend',)
 
+
+# hbase permission key
+HBASE_QUERY_PERM = 'q'
+HBASE_INSERT_PERM = 'i'
+HBASE_DELETE_PERM = 'd'
 
 # Keep default values up to date
 TEMPLATE_CONTEXT_PROCESSORS = (

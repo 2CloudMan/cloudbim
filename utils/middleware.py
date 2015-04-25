@@ -61,7 +61,7 @@ class GroupMiddleware(object):
             except Exception as e:
                 raise PopupException('%s' % e)
         else:
-            request.project = None
+            request.group = None
         
 class ExceptionMiddleware(object):
     """
