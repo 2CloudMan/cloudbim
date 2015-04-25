@@ -100,7 +100,7 @@
         <tr data-bind="visible: ${datasource}.isLoading() || ${datasource}.isReLoading()">
             <td colspan="8" class="left">
               <!--[if !IE]><!--><i class="fa fa-spinner fa-spin" style="font-size: 20px; color: #BBB"></i><!--<![endif]-->
-              <!--[if IE]><img src="${ static('art/spinner.gif') }"/><![endif]-->
+              <!--[if IE]><img src="${ static('desktop/art/spinner.gif') }"/><![endif]-->
             </td>
         </tr>
       </tfoot>
@@ -110,7 +110,7 @@
 <%def name="smartview(datasource)">
   <div class="smartview" data-bind="foreach: ${datasource}.items(), css: { 'gridView': ${datasource}.showGrid() }">
     <div class="smartview-row" data-bind="css:{selected:$data.isSelected()}, visible: $data.items().length > 0 || $data.isLoading()">
-      <h5 data-bind="click: lockClickOrigin($data.select, $element)"><code class="row_key" data-bind="text: $data.row.slice(0, 100) + ($data.row.length > 100 ? '...' : '')"></code> <i class="fa fa-check-square" data-bind="visible:$data.isSelected()"></i> <img data-bind="visible: $data.isLoading()" src="${ static('art/spinner.gif') }" />
+      <h5 data-bind="click: lockClickOrigin($data.select, $element)"><code class="row_key" data-bind="text: $data.row.slice(0, 100) + ($data.row.length > 100 ? '...' : '')"></code> <i class="fa fa-check-square" data-bind="visible:$data.isSelected()"></i> <img data-bind="visible: $data.isLoading()" src="${ static('desktop/art/spinner.gif') }" />
         <span class="smartview-row-controls controls-hover-bottom">
           <button class="btn" data-bind="click: $data.reload, clickBubble: false" data-toggle="tooltip" title="${_('Refresh Row')}"><i class="fa fa-refresh"></i></button>
           % if user.is_superuser:
@@ -142,7 +142,7 @@
             <a class="corner-btn btn" data-bind="visible: $data.editing(), event: { mousedown: function(){launchModal('cell_edit_modal',{content:$data, mime: detectMimeType($data.value())})} }"><i class="fa fa-pencil"></i> ${_('Full Editor')}</a>
             <pre data-bind="text: ($data.value().length > 146 ? $data.value().substring(0, 144)+'...' : $data.value()).replace(/(\r\n|\n|\r)/gm,''), click: editCell.bind(null, $data), clickBubble: false, visible: !$data.isLoading() && !$data.editing()"></pre>
             <textarea data-bind="visible: !$data.isLoading() && $data.editing(), hasfocus: $data.editing, value: $data.value, click:function(){}, clickBubble: false"></textarea>
-            <img src="${ static('art/spinner.gif') }" data-bind="visible: $data.isLoading() " />
+            <img src="${ static('desktop/art/spinner.gif') }" data-bind="visible: $data.isLoading() " />
           </div>
         </li>
         <!-- /ko -->
@@ -152,7 +152,7 @@
   <br/>
   <center data-bind="visible: ${datasource}.isLoading()">
   <!--[if !IE]><!--><i class="fa fa-spinner fa-spin loader-main"></i><!--<![endif]-->
-  <!--[if IE]><img src="${ static('art/spinner.gif') }" /><![endif]-->
+  <!--[if IE]><img src="${ static('desktop/art/spinner.gif') }" /><![endif]-->
   </center>
   <div class="alert" data-bind="visible: ${datasource}.items().length == 0 && !${datasource}.isLoading()">
       ${_('No rows to display.')}
@@ -429,7 +429,7 @@
                 <!-- ko foreach: $data.content.history.items() -->
                   <li data-bind="css: { 'active': $data.timestamp == $parent.content.timestamp }"><a data-bind="click: $parent.content.history.pickHistory.bind(null, $data), text: formatTimestamp($data.timestamp)" class="pointer"></a></li>
                 <!-- /ko -->
-                <li data-bind="visible: $data.content.history.loading()"><img src="${ static('art/spinner.gif') }" /></li>
+                <li data-bind="visible: $data.content.history.loading()"><img src="${ static('desktop/art/spinner.gif') }" /></li>
               </ul>
             </div>
           </div>
