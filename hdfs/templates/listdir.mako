@@ -9,7 +9,7 @@ ${ commonheader(request) | n,unicode }
 <div data-pjax>
 
     <div>
-        ${ sub.showSubMenu('Hha', 'Designer', '')}
+        ${ sub.showSubMenu(project, curr_role, roles, 'fb')}
     </div>
 
     <div class="container" id="pjax-container">
@@ -20,7 +20,7 @@ ${ commonheader(request) | n,unicode }
                 <li>
                     <ul class="hueBreadcrumb" data-bind="foreach: breadcrumbs" style="padding-right:40px; padding-top: 12px">
                         <li data-bind="visible: label == '/'"><a href="" data-bind="click: show"><span class="divider" data-bind="text: label"></span></a></li>
-                        <li data-bind="visible: label != '/'"><a href="" data-bind="text: label" click:show></a><span class="divider">/</span></li>
+                        <li data-bind="visible: label != '/'"><a href="" data-bind="text: label, click: show"></a><span class="divider">/</span></li>
                     </ul>
                 </li>
             </ul>
@@ -50,8 +50,8 @@ ${ commonheader(request) | n,unicode }
 
 
         <div class="pull-left" style="margin:20px 0;">
-            <button type="button" class="btn btn-primary" data-bind="enable : selectedFiles().length == 1 && !selectedFile().isdir">Download</button>
-            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-bind="enable : selectedFiles().length > 0">Delete</button>
+            <button type="button" class="btn btn-primary" data-bind="enable : selectedFiles().length == 1 && !selectedFile().isdir, click: downloadFile">Download</button>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-bind="enable : selectedFiles().length > 0, click: deleteSelected">Delete</button>
         </div>
 
 
@@ -159,7 +159,7 @@ ${ commonheader(request) | n,unicode }
 
               <div class="modal-body">
 
-              <form id="deleteForm" action="">
+              <form id="deleteForm" action="" method="post">
                 <button type="cancel" class="btn btn-default" style="margin-top: 10px">取消</button>
                 <button type="submit" class="btn btn-default btn-danger" style="margin-top: 10px">确定</button>
               </form>
@@ -315,8 +315,8 @@ ${ commonheader(request) | n,unicode }
             label: breadcrumb.label,
             show: function() {
                 console.log("show called");
-                //self.targetPath('/project/${curr_proj}/${curr_role}/fb/view${url}');
                 location.href = '/project/${curr_proj}/${curr_role}/fb/view' + this.url;
+                console.log(location.href);
             }
 
         }
@@ -489,22 +489,24 @@ ${ commonheader(request) | n,unicode }
             }
         };
 
+        self.downloadFile = function() {
+            location.href = self.basePath + 'download' + self.selectedFile().path;
+
+        }
+
         self.deleteSelected = function () {
            var paths = [];
 
             $(self.selectedFiles()).each(function (index, file) {
-              paths.push(file.path);
+              paths.push(file.raw_path);
             });
 
             hiddenFields($("#deleteForm"), 'path', paths);
 
-            $("#deleteForm").attr("action", "rmtree" + "?" +
-              "next=/");
+            $("#deleteForm").attr("action", self.basePath + "rmtree" + "?" +
+              "next=" + self.targetPath());
 
-            $("#deleteModal").modal({
-              keyboard:true,
-              show:true
-            });
+
         };
 
         // Place all values into hidden fields under parent element.

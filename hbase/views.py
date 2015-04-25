@@ -41,7 +41,7 @@ LOG = logging.getLogger(__name__)
 def has_write_access(user):
   return user.is_superuser or user.has_hue_permission(action="write", app=DJANGO_APPS[0])
 
-def app(request):
+def app(request, proj_slug, role_slug):
   return render('app.mako', request, {
     'can_write': has_write_access(request.user)
   })

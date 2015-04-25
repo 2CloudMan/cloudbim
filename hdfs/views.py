@@ -463,7 +463,7 @@ def formset_data_extractor(recurring=[], submitted=[]):
 
 
 @require_http_methods(["POST"])
-def rmtree(request):
+def rmtree(request, proj_slug, role_slug):
     """
     delete a tree recursively
     if skip_trash is true move  file or directory to trash.
@@ -481,8 +481,7 @@ def rmtree(request):
                 # do more
                 continue
             # 如果用户是超级用户或者拥有写文件所在目录的写权限即可删除文件    
-            request.fs.do_as_user(request.user, request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
-            
+            request.fs.do_as_superuser(request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
             # 暂时不能地柜删除文件，所以这里清理信息无需考虑递归清理
             clear_file_info(arg['path'])
 
