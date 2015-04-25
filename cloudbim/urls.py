@@ -12,7 +12,6 @@ urlpatterns = patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^hdfs/', include('hdfs.urls')),
     url(r'^auth/', include('auth.urls')),
     url(r'^hbase/', include('hbase.urls')),
     url(r'^project/$', 'main.views.index', name='index'),

@@ -61,6 +61,7 @@ class GroupMiddleware(object):
             except Exception as e:
                 raise PopupException('%s' % e)
         else:
+            raise PopupException("can't get user group")
             request.project = None
         
 class ExceptionMiddleware(object):

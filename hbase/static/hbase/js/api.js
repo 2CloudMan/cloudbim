@@ -19,7 +19,7 @@ var API = {
   //query(functionName, ClusterName, arg0, arg1).done(callback)
   query: function() {
     // all url building should be in this function
-    var url = "/hbase/api";
+    var url = "api";
     var $_POST = {};
     for(var i=0;i<arguments.length;i++) {
       if (arguments[i] == null)
