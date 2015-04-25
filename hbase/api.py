@@ -41,10 +41,10 @@ LOG = logging.getLogger(__name__)
 # Format methods similar to Thrift API, for similarity with catch-all
 class HbaseApi(object):
   HBASE_ACTION_PERM_REQUEST={
-        r"^(getTableList|getClusters?)$": True,
-        r"^get\w": settings.HBASE_QUERY_PERM,
-        r"^put\w": settings.HBASE_INSERT_PERM,
-        r"^delete\w": settings.HBASE_DELETE_PERM,
+        r"^(getTableList)|(getClusters?)$": True,
+        r"^(get\w*)|(scan\w*)": settings.HBASE_QUERY_PERM,
+        r"^(put\w*)": settings.HBASE_INSERT_PERM,
+        r"^(delete\w*)": settings.HBASE_DELETE_PERM,
   }
 
 

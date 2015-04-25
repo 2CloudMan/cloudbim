@@ -35,7 +35,7 @@ from hbase.settings import DJANGO_APPS
 from hbase.api import HbaseApi
 from hbase.management.commands import hbase_setup
 from server.hbase_lib import get_thrift_type
-from admin.models import ensuire_table_info
+from admin.models import ensuire_table_info, get_group_table_permission
 
 LOG = logging.getLogger(__name__)
 
@@ -44,8 +44,13 @@ def has_write_access(user):
   return user.is_superuser or user.has_hue_permission(action="write", app=DJANGO_APPS[0])
 
 def app(request, proj_slug, role_slug):
+    # should give a table name
+    # perm = get_group_table_permission(request.group, table)
+
   return render('app.mako', request, {
-    'can_write': has_write_access(request.user)
+    'can_write': has_write_access(request.user), 
+    # 'can_wirte': settings.HBASE_INSERT_PERM in perm,
+    # 'can_delete': settings.HBASE_DELETE_PERM in perm
   })
 
 
@@ -82,21 +87,29 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
   url_params = [safe_json_load((arg, request.POST.get(arg[0:16], arg))[arg[0:15] == 'hbase-post-key-'])
                 for arg in decoded_url_params] # Deserialize later
 
-#     # 操作权限验证
-#   action = url_params[0]
-#   need_perm = action_perm_required(action)
-#   tablename = url_params[2] if len(url_params) > 2 else None
-#   if not request.user.userprofile_set.first().has_hbase_permission(request.group, action, need_perm):
-#     return PopupException('Permission deny! : user %s try to %s table %s' %
-#                               request.user.username, action, tablename)
+   # 操作权限验证
+  action = url_params[0]
+  need_perm = action_perm_required(action)
+  tablename = url_params[2] if len(url_params) > 2 else None
+  if not request.user.userprofile_set.first().has_hbase_permission(request.group, tablename, need_perm):
+    LOG.info('Permission deny! : user %s try to %s table %s' %
+                          (request.user.username, action, tablename))
+    return JsonResponse({'error': 'Permission deny!'}, status=403)
  
 #   # create or clear table info when needed
 #   ensuire_table_info(request.user, tablename, request.group, action)
 
   if request.POST.get('dest', False):
     url_params += [request.FILES.get(request.REQUEST.get('dest'))]
+    
+  # do
+  result = HbaseApi(request.user).query(*url_params)
+  
+  # create table info when call method createTable
+  if action == 'createTable':
+    ensuire_table_info(request.user, tablename, request.group, action)
 
-  return api_dump(HbaseApi(request.user).query(*url_params))
+  return api_dump(result)
 
 def api_dump(response):
   ignored_fields = ('thrift_spec', '__.+__')

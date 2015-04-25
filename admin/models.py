@@ -71,17 +71,17 @@ class UserProfile(models.Model):
         else:
             return perm.groups.filter(name=group.name).exists()
 
-    def is_table_owner(self):
-        return TableInfo.objects.filter(creator=self.user).exists()
+    def is_table_owner(self, table):
+        return TableInfo.objects.filter(creator=self.user, table=table).exists()
     
     def has_hbase_permission(self, group, table, perm):
         if perm == True:
             return True
 
-        if self.is_table_owner():
+        if self.is_table_owner(table):
             return True
 
-        if perm in [settings.HBSE_INSERT_PERM, settings.HBASE_QUERY_PERM,
+        if perm in [settings.HBASE_INSERT_PERM, settings.HBASE_QUERY_PERM,
                        settings.HBASE_DELETE_PERM]:
             if self.has_hbase_data_permission(group, table, perm):
                 return True
@@ -92,13 +92,10 @@ class UserProfile(models.Model):
         if not table or not perm:
             return False
         # 前期测试，功能完成后删除
-        if self.user.is_superuser:
-            return True
-        
+#         if self.user.is_superuser:
+#             return True
         if group_has_table_permission(group, table, perm):
             return True
-        
-        # 判断用户是不是表格所属人
         
         return False
 
@@ -199,14 +196,9 @@ TABLE_PERM_CHOICES = (
     ('i', 'can insert data'),
     ('d', 'can delete data'),
     ('q', 'can query data'),
-    ('m', 'can modify data'),
     ('qd', 'can query and delete data'),
-    ('qm', 'can query and modify'),
     ('qi', 'can query and insert'),
-    ('qmd', 'can query, modify and delete'),
-    ('qmi', 'can query, modify and insert'),
     ('qdi', 'can query, delete and inset'),
-    ('qmdi', 'can query, modify, delete and inset'),
 )
 
 
@@ -317,7 +309,16 @@ def ensure_new_fileinfo(path, owner, group):
         transaction.commit()
 
 
-
+def get_group_table_permission(group, table):
+    if not group or not table:
+        return ''
+    
+    perm = BimHbasePermission.objects.filter(table__table=table)
+    
+    if perm:
+        if perm.groups.filter(name=group.name).exists():
+            return perm.action
+    return ''
     
     
 def group_has_table_permission(group, table, perm):
@@ -326,11 +327,10 @@ def group_has_table_permission(group, table, perm):
 
     perm = BimHbasePermission.objects.filter(table__table=table,
                                            action__contains=perm).first()
-                                
-    if not perm:
-        return False
-    else:
+      
+    if perm:
         return perm.groups.filter(name=group.name).exists()
+    return False
 
 
 def get_profile(user):
@@ -489,7 +489,7 @@ def ensuire_table_info(user, tablename, group, action):
             table.save()
             
             # create permission
-            perm = BimHbasePermission(table=table, action='qmi', creator=user)
+            perm = BimHbasePermission(table=table, action='qi', creator=user)
             perm.group.add(group)
             perm.save()
         except Exception as e:
