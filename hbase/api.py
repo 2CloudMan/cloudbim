@@ -20,6 +20,7 @@ import logging
 import re
 import csv
 
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.utils.encoding import smart_str
@@ -35,8 +36,18 @@ from hbase.server.hbase_lib import get_thrift_type, get_client_type
 LOG = logging.getLogger(__name__)
 
 
+
+
 # Format methods similar to Thrift API, for similarity with catch-all
 class HbaseApi(object):
+  HBASE_ACTION_PERM_REQUEST={
+        r"^getTableList$": True,
+        r"^get\w": settings.HBASE_QUERY_PERM,
+        r"^put\w": settings.HBASE_INSERT_PERM,
+        r"^delete\w": settings.HBASE_DELETE_PERM,
+  }
+
+
 
   def __init__(self, user):
     self.user = user

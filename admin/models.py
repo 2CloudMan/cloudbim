@@ -59,7 +59,8 @@ class UserProfile(models.Model):
         
     def has_file_permission(self, group, path, perm):
         # user must be a member of this group
-        if self.user not in group.user_set.all():
+        if not group or not path or not perm or \
+                self.user not in group.user_set.all():
             return False
         
         perm = BimFilePermission.objects.filter(file__path=path,
@@ -70,18 +71,38 @@ class UserProfile(models.Model):
         else:
             return perm.groups.filter(name=group.name).exists()
 
-    def has_hbase_permission(self, table, perm):
+    def is_table_owner(self):
+        return TableInfo.objects.filter(creator=self.user).exists()
+    
+    def has_hbase_permission(self, group, table, perm):
+        if perm == True:
+            return True
+
+        if self.is_table_owner():
+            return True
+
+        if perm in [settings.HBSE_INSERT_PERM, settings.HBASE_QUERY_PERM,
+                       settings.HBASE_DELETE_PERM]:
+            if self.has_hbase_data_permission(group, table, perm):
+                return True
+
+        return False
+            
+    def has_hbase_data_permission(self, group, table, perm):
         if not table or not perm:
             return False
+        # 前期测试，功能完成后删除
         if self.user.is_superuser:
             return True
-        if self.user.userprofile.is_rightmanager:
+        
+        if group_has_table_permission(group, table, perm):
             return True
-        for group in self.user.groups.all():
-            if group_has_table_permission(group, table, perm):
-                return True
-            return False
-     
+        
+        # 判断用户是不是表格所属人
+        
+        return False
+
+
     def get_projects(self):
         projects = set()
         groups = self.get_groups()
@@ -167,16 +188,38 @@ class TableInfo(models.Model):
         return "%s:%s(%d)" % (self.table, self.creator, self.pk)
 
 
+FILE_PERM_CHOICES = (
+    ('r', 'can read'),
+    ('w', 'can write'),
+    ('rw', 'both read and write'),
+)
+
+
+TABLE_PERM_CHOICES = (
+    ('i', 'can insert data'),
+    ('d', 'can delete data'),
+    ('q', 'can query data'),
+    ('m', 'can modify data'),
+    ('qd', 'can query and delete data'),
+    ('qm', 'can query and modify'),
+    ('qi', 'can query and insert'),
+    ('qmd', 'can query, modify and delete'),
+    ('qmi', 'can query, modify and insert'),
+    ('qdi', 'can query, delete and inset'),
+    ('qmdi', 'can query, modify, delete and inset'),
+)
+
+
 class BimHbasePermission(models.Model):
     """
     Set of  permissions that a hdfs file supports.
   
     For now, we only assign permissions to groups, though that may change.
     """
-    groups = models.ManyToManyField(auth_models.Group) 
     table = models.ForeignKey(TableInfo)
-    action = models.CharField(max_length=255)
+    action = models.CharField(max_length=255, choices=TABLE_PERM_CHOICES)
     description = models.CharField(max_length=255, blank=True)
+    groups = models.ManyToManyField(auth_models.Group) 
     creator = models.ForeignKey(auth_models.User)
     create_time = models.DateTimeField(default=timezone.now)
 
@@ -216,7 +259,7 @@ class BimFilePermission(models.Model):
     For now, we only assign permissions to groups, though that may change.
     """
     file = models.ForeignKey(FileInfo)  # 使用linux最大文件路径长度
-    action = models.CharField(max_length=100)
+    action = models.CharField(max_length=100, choices=FILE_PERM_CHOICES)
     description = models.CharField(max_length=255, blank=True)
     groups = models.ManyToManyField(auth_models.Group) # , through=GroupPermission
     creator = models.ForeignKey(auth_models.User)
@@ -278,6 +321,8 @@ def ensure_new_fileinfo(path, owner, group):
     
     
 def group_has_table_permission(group, table, perm):
+    if not group or not table or not perm:
+        return False
 
     perm = BimHbasePermission.objects.filter(table__table=table,
                                            action__contains=perm).first()
@@ -432,3 +477,29 @@ def ensure_proj_role_directory(fs, proj_slug, role_slug):
 
     fs.do_as_superuser(fs.create_proj_dir, proj_dir)
     fs.do_as_superuser(fs.create_role_dir, role_dir)
+
+
+  # create or clear table info when needed
+@transaction.commit_manually
+def ensuire_table_info(user, tablename, group, action):
+    if action == 'createTable':
+        try:
+            # create table info
+            table = TableInfo(table=tablename, creator=user, group=group)
+            table.save()
+            
+            # create permission
+            perm = BimHbasePermission(table=table, action='qmi', creator=user)
+            perm.group.add(group)
+            perm.save()
+        except Exception as e:
+            LOG.error("user %s of group %s: table info create failed!: %s" % (user, group, e)) 
+            transaction.rollback()
+        else:
+            transaction.commit()
+    
+    # 删除表格信息的操作
+    pass
+
+       
+  

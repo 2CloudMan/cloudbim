@@ -377,4 +377,3 @@ class GroupProfileForm(forms.ModelForm):
             ensure_proj_role_directory(fs, proj_slug, role_slug)
             
         return self.cleaned_data
-    

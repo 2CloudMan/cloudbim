@@ -517,6 +517,7 @@ def download(request, proj_slug, role_slug, path):
     if not request.fs.isfile(hadoop_path):
         raise PopupException(_("'%(path)s' is not a file.") % {'path': hadoop_path})
 
+    # //权限判断
     if not request.user.is_superuser and \
             not request.user.has_file_permission(request.group, hadoop_path, 'w'):
                 raise PopupException(_('Permission deny: user %(user) try download  file %(name)s.' 

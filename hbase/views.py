@@ -26,7 +26,7 @@ import urllib
 from avro import datafile, io
 
 from django.utils.translation import ugettext as _
-
+from django.conf import settings
 from utils.lib.django_util import JsonResponse, render
 
 from hbase import conf
@@ -34,6 +34,8 @@ from hbase.settings import DJANGO_APPS
 from hbase.api import HbaseApi
 from hbase.management.commands import hbase_setup
 from server.hbase_lib import get_thrift_type
+from django_util import PopupException
+from admin.models import ensuire_table_info
 
 LOG = logging.getLogger(__name__)
 
@@ -46,6 +48,16 @@ def app(request):
     'can_write': has_write_access(request.user)
   })
 
+
+def action_perm_required(action):
+  for item in HbaseApi.HBASE_ACTION_PERM_REQUEST.iterkeys():
+      pattern = re.compile(item)
+      match = pattern.match(action)
+      if match:
+          return HbaseApi.HBASE_ACTION_PERM_REQUEST.get(item)
+  return None
+      
+        
 # action/cluster/arg1/arg2/arg3...
 def api_router(request, url): # On split, deserialize anything
 
@@ -70,9 +82,20 @@ def api_router(request, url): # On split, deserialize anything
   url_params = [safe_json_load((arg, request.POST.get(arg[0:16], arg))[arg[0:15] == 'hbase-post-key-'])
                 for arg in decoded_url_params] # Deserialize later
 
+  # 操作权限验证
+  action = url_params[0]
+  need_perm = action_perm_required(action)
+  tablename = url_params[2] if len(url_params) > 2 else None
+  if not request.user.has_hbase_permission():
+      return PopupException('Permission deny! : user %s try to %s table %s' %
+                            request.user.username, action, tablename)
+
+  # create or clear table info when needed
+  ensuire_table_info(request.user, tablename, request.group, action)
+
   if request.POST.get('dest', False):
     url_params += [request.FILES.get(request.REQUEST.get('dest'))]
- 
+
   return api_dump(HbaseApi(request.user).query(*url_params))
 
 def api_dump(response):
