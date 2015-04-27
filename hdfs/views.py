@@ -101,7 +101,6 @@ def listdir_paged(request, proj_slug, role_slug, path):
         proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
         data = \
         {
-            'user' : request.user,
             'curr_proj': proj_slug,
             'curr_role': role_slug,
             'project': proj_info,
@@ -125,6 +124,8 @@ def listdir_paged(request, proj_slug, role_slug, path):
     format = request.GET.get('format', None)
     if format == 'json':
         return JsonResponse(data)
+
+    data['user'] = request.user
     return render('listdir.mako', request, data)
 
 
@@ -152,7 +153,6 @@ def _massage_stats(request, stats, cur_path):
         Log.warn("Can't find file info of File %s" % path)
 
     return {
-        'user': request.user,
         'name': stats['name'],
         'path': relpath,
         'owner': owner,

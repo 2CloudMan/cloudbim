@@ -4,7 +4,7 @@ from utils.views import commonheader, commonfooter
 
 <%namespace name="sub" file="sub_header.mako"/>
 
-${ commonheader(request) | n,unicode }
+${ commonheader(user) | n,unicode }
 
 <div class="container">
 

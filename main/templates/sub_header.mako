@@ -1,34 +1,43 @@
-<%def name="showSubMenu(projectName, roleList, app)">
-    <style type="text/css">
-        body {
-            padding-top:100px !important;
-        }
-    </style>
+<%def name="showSubMenu(curr_proj, curr_role, roleList, app)">
+
     <script type="text/javascript" src="${ static('main/js/nav.js') }"></script>
-    <div class="navbar navbar-default navbar-fixed-top sub-nav" style="top:50px!important">
+    <div class="navbar sub-nav" ">
         <div class="container">
-
-          <p class="navbar-text">ProjectName</p>
-
-          <div class="btn-group">
-              <button type="button" class="btn btn-default dropdown-toggle navbar-btn" data-toggle="dropdown" aria-expanded="false">
-                RoleA <span class="caret"></span>
-              </button>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="#">RoleA</a></li>
-                <li><a href="#">RoleB</a></li>
-                <li><a href="#">RoleC</a></li>
-                <li class="divider"></li>
-                <li><a href="#">other Roles</a></li>
+          <div class="navbar-inner">
+              <a class="brand" href="#">${curr_proj['name']}</a>
+              <div class="btn-group">
+                  <a type="button" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    ${curr_role} <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu" role="menu">
+                    % for role in roleList:
+                    <li><a href="/project/${curr_proj['slug']}/${role['slug']}/${app}/view">${role['name']}</a></li>
+                    % endfor
+                  </ul>
+              </div>
+              <ul class="nav navbar-nav navbar-right">
+                <li
+                % if app == 'fb':
+                class="active"
+                % endif
+                ><a href="/project/${curr_proj['name']}/${curr_role}/fb/view/">FileSystem</a></li>
+                <li
+                % if app == 'tb':
+                class="active"
+                % endif
+                ><a href="/project/${curr_proj['name']}/${curr_role}/tb">Table</a></li>
+                <li
+                % if app == 'log':
+                class="active"
+                % endif
+                ><a href="/project/${curr_proj['name']}/${curr_role}/log">Log</a></li>
+                <li
+                % if app == 'info':
+                class="active"
+                % endif
+                ><a href="/project/${curr_proj['name']}/${curr_role}/info">Detail</a></li>
               </ul>
           </div>
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="fb/view/">FileSystem</a></li>
-            <li><a href="table">Table</a></li>
-            <li><a href="log">Log</a></li>
-            <li class="active"><a href="info">Detail</a></li>
-          </ul>
-
         </div>
     </div>
 </%def>

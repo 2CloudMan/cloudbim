@@ -1,34 +1,28 @@
 <%!
-  from django.utils.translation import ugettext as _
+from utils.views import commonheader, commonfooter
 %>
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="#">BIMFs</a>
-            </div>
-            <!-- <div id="navbar" class="navbar-collapse collapse">
 
-            </div> -->
-        </div>
-    </nav>
-    <div class="container">
-  <div class="row">
-    <div class="login-content center">
-      <div id="logo"></div>
+${ commonheader(user) | n,unicode }
 
-      <form method="POST" action="${action}" class="well">
+<style type="text/css">
+
+.form-signin {
+    width: 370px;
+    margin: 20px auto 20px;
+    padding: 20px;
+    background-color:#FFF;
+}
+
+</style>
+
+  <div class="container">
+
+      <form class="form-signin" method="POST" action="${action}" class="well">
         ${ csrf_token(request) | n,unicode }
         %if first_login_ever:
-          <h3>${_('Create your Hue account')}</h3>
+          <h3>${_('Create your CloubBIM account')}</h3>
         %else:
-          <h3>${_('Sign in to continue to Hue')}</h3>
+          <h3>${_('Sign in to continue to CloubBIM')}</h3>
         %endif
 
         %if first_login_ever:
@@ -81,14 +75,12 @@
         %endif
         <hr/>
         %if first_login_ever:
-          <input type="submit" class="btn btn-large btn-primary" value="${_('Create account')}"/>
+          <input type="submit" class="btn btn-primary" value="${_('Create account')}"/>
         %else:
-          <input type="submit" class="btn btn-large btn-primary" value="${_('Sign in')}"/>
+          <input type="submit" class="btn btn-primary" value="${_('Sign in')}"/>
         %endif
         <input type="hidden" name="next" value="${next}"/>
       </form>
-    </div>
   </div>
-</div>
 </body>
 </html>

@@ -4,7 +4,7 @@ from utils.views import commonheader, commonfooter
 
 <%namespace name="sub" file="sub_header.mako"/>
 
-${ commonheader(request) | n,unicode }
+${ commonheader(user) | n,unicode }
 
 <div class="container">
 
@@ -30,8 +30,8 @@ ${ commonheader(request) | n,unicode }
       <tfoot>
         <tr data-bind="visible: ${datasource}.isLoading() || ${datasource}.isReLoading()">
             <td colspan="8" class="left">
-              <!--[if !IE]><!--><i class="fa fa-spinner fa-spin" style="font-size: 20px; color: #BBB"></i><!--<![endif]-->
-              <!--[if IE]><img src="${ static('desktop/art/spinner.gif') }"/><![endif]-->
+              <!--[if !IE]><!--><i class="fa fa-spinner fa-spin hidden" style="font-size: 20px; color: #BBB"></i><!--<![endif]-->
+              <!--[if IE]><img src="${ static('art/spinner.gif') }"/><![endif]-->
             </td>
         </tr>
       </tfoot>
@@ -106,7 +106,7 @@ ${ commonheader(request) | n,unicode }
   <div class="card card-small">
   <!-- Page Header -->
   <h1 class="card-heading simple">
-    <a href="/hbase/">${_('Home')}</a> - <a data-bind="text: app.cluster(), attr: { href: '#' + app.cluster() }"></a>
+    <a href="">${_('Home')}</a> - <a data-bind="text: app.cluster(), attr: { href: '#' + app.cluster() }"></a>
     <span data-bind="visible: app.station() == 'table'">/ <a data-bind="text: app.views.tabledata.name(), attr: { href: '#' + app.cluster() + '/' + app.views.tabledata.name()}"></a></span>
     <span class="pull-right">
       <span class="dropdown">

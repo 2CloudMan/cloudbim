@@ -2,7 +2,7 @@
 from utils.views import commonheader, commonfooter
 %>
 
-${ commonheader(request) | n,unicode }
+${ commonheader(user) | n,unicode }
 
 <link href="${ static('main/css/home.css') }" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="${ static('main/js/home.js') }"></script>
@@ -34,8 +34,6 @@ ${ commonheader(request) | n,unicode }
         </div>
 
     </div>
-
-
 
 </div>
 

@@ -17,8 +17,10 @@
 
 from django.conf.urls import url, patterns
 
+handler404 = 'utils.views.serve_404_error'
 
 urlpatterns = patterns('auth.views',
   url(r'^login', 'dt_login', name='login'),
+  url(r'^logout', 'dt_logout', {'next_page': '/auth/login'}, name='logout'),
 
 )

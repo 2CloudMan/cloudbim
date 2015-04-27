@@ -1,9 +1,10 @@
-from djangomako.shortcuts import render_to_string
+from djangomako.shortcuts import render_to_string, render_to_response
 
 # Create your views here.
-def commonheader(request) :
+def commonheader(user) :
     
-    return render_to_string('common_header.mako', {})
+    return render_to_string('common_header.mako',
+                            {'user':user})
 
 
 def commonfooter() :
@@ -13,8 +14,8 @@ def commonfooter() :
 
 def serve_404_error(request, *args, **kwargs):
   """Registered handler for 404. We just return a simple error"""
-  access_warn(request, "404 not found")
-  return render("404.mako", request, dict(uri=request.build_absolute_uri()), status=404)
+  #access_warn(request, "404 not found")
+  return render_to_response("404.mako", dict(uri=request.build_absolute_uri()), status=404)
 
 def serve_500_error(request, *args, **kwargs):
   """Registered handler for 500. We use the debug view to make debugging easier."""

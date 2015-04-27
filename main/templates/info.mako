@@ -4,16 +4,20 @@ from utils.views import commonheader, commonfooter
 
 <%namespace name="sub" file="sub_header.mako"/>
 
-${ commonheader(request) | n,unicode }
+${ commonheader(user) | n,unicode }
 
-<div data-pjax>
+<div class="container">
 
     <div>
-        ${ sub.showSubMenu('Hha', 'Designer', 'fb')}
+       ${ sub.showSubMenu({'name': 'webform'}, 'worker', [], 'info' )}
     </div>
 
-    <div class="container" id="pjax-container">
-        <p>test</p>
+    <div class="card">
+        <div class="container">
+
+        </div>
     </div>
 
 </div>
+
+${ commonfooter() | n,unicode }

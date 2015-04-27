@@ -1,5 +1,6 @@
 # -*- coding=utf-8 -*-
 from django.http.response import HttpResponse, HttpResponseRedirect
+from utils.lib.exceptions_renderable import PopupException
 
 import admin
 from admin.models import get_profile, get_group_profile
@@ -26,6 +27,7 @@ def listproj_paged(request) :
             'proj_name': 'lala'
         }]
     """
+
     if request.user.is_authenticated():
         pagenum = int(request.GET.get('pagenum', 1))
         pagesize = int(request.GET.get('pagesize', 30))
@@ -37,9 +39,9 @@ def listproj_paged(request) :
         projects = get_profile(request.user).get_projects()
         page = paginator.Paginator(projects, pagesize).page(pagenum)
         shown_projects =  [{'proj_name': project.name} for project in page.object_list]
-        return HttpResponse({'data': 121},status=404)
+        #return HttpResponse({'data': 121},status=404)
         return render('listproj.mako', request, {
-            'user': user,
+            'user': request.user,
             'projects': shown_projects
         })
     else:
