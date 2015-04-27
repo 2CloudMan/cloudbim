@@ -37,7 +37,7 @@ def listproj_paged(request) :
         projects = get_profile(request.user).get_projects()
         page = paginator.Paginator(projects, pagesize).page(pagenum)
         shown_projects =  [{'proj_name': project.name} for project in page.object_list]
-        
+        return HttpResponse({'data': 121},status=404)
         return render('listproj.mako', request, {
             'user': user,
             'projects': shown_projects

@@ -59,8 +59,7 @@ class UserProfile(models.Model):
         
     def has_file_permission(self, group, path, perm):
         # user must be a member of this group
-        if not group or not path or not perm or \
-                self.user not in group.user_set.all():
+        if not group or not path or not perm:
             return False
         
         perm = BimFilePermission.objects.filter(file__path=path,

@@ -101,7 +101,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
         proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
         data = \
         {
-            #'user' : request.user,
+            'user' : request.user,
             'curr_proj': proj_slug,
             'curr_role': role_slug,
             'project': proj_info,
@@ -152,6 +152,7 @@ def _massage_stats(request, stats, cur_path):
         Log.warn("Can't find file info of File %s" % path)
 
     return {
+        'user': request.user,
         'name': stats['name'],
         'path': relpath,
         'owner': owner,
@@ -477,12 +478,10 @@ def rmtree(request, proj_slug, role_slug):
         # 验证用户权限
             # 获取文件所在目录的权限
             dirname = posixpath.dirname(arg['path'])
-            print dirname
-            print arg['path']
-            if not request.user.is_superuser or not get_profile(request.user).has_file_permission(request.group, dirname, 'w'):
+            if not request.user.is_superuser and not get_profile(request.user).has_file_permission(request.group, dirname, 'w'):
                 # do more
-                continue
-            # 如果用户是超级用户或者拥有写文件所在目录的写权限即可删除文件    
+                raise PopupException('Permission deny!!')
+            # 如果用户是超级用户或者拥有写文件所在目录的写权限即可删除文件
             request.fs.do_as_superuser(request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
             # 暂时不能地柜删除文件，所以这里清理信息无需考虑递归清理
             clear_file_info(arg['path'])

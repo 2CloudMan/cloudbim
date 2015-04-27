@@ -48,6 +48,7 @@ def app(request, proj_slug, role_slug):
     # perm = get_group_table_permission(request.group, table)
 
   return render('app.mako', request, {
+    'user': request.user,
     'can_write': has_write_access(request.user), 
     # 'can_wirte': settings.HBASE_INSERT_PERM in perm,
     # 'can_delete': settings.HBASE_DELETE_PERM in perm

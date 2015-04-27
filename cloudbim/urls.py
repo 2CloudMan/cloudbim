@@ -2,6 +2,12 @@ from django.conf.urls import patterns, include, url
 
 from django.contrib import admin
 
+# Django expects handler404 and handler500 to be defined.
+# django.conf.urls provides them. But we want to override them.
+# Also see http://code.djangoproject.com/ticket/5350
+handler404 = 'utils.views.serve_404_error'
+handler500 = 'utils.views.serve_500_error'
+
 admin.autodiscover()
 
 from hdfs import views
