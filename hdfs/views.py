@@ -79,10 +79,9 @@ def listdir_paged(request, proj_slug, role_slug, path):
         Log.warn('user %s try to open a dir user the given path %s but it is not a directory!' %
                 (request.user.username, hadoop_path)) 
         raise PopupException("Not a directory: %s" % (hadoop_path,))
-    
+
     # 用户是否有查看目录的权限
-    if get_profile(request.user).has_file_permission(request.group, hadoop_path, 'r')\
-            or request.user.is_superuser:
+    if get_profile(request.user).has_file_permission(request.group, hadoop_path, 'r'):
         dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, hadoop_path)
         # Filter
         # 排序
@@ -98,6 +97,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
         files = [ _massage_stats(request, s, project_home) for s in shown_stats ]
         page = _massage_page(page)
+        print files
         proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
         data = \
         {
@@ -119,7 +119,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
         # 这里应该添加权限限制提醒
         Log.warn("Permission deny: user %s try to open directory %s" %
                  (request.user.username, path))
-        data = {'error': 'Permission deny'}
+        raise PopupException('Permission deny!')
 
     # 返回格式控制
     format = request.GET.get('format', None)
@@ -253,8 +253,7 @@ def _upload_file(request):
                                    {'sep': posixpath.sep, 'name': uploaded_file.name}))
 
         # 判断用户是否有权限上传文件
-        if not request.user.is_superuser and \
-                not get_profile(request.user).has_file_permission(request.group, dest, 'w'):
+        if not get_profile(request.user).has_file_permission(request.group, dest, 'w'):
             raise PopupException(_('Permission deny: user %(user) try upload file %(name)s to destination %(dest).' 
                                    % {'user': request.user.username, 'name': uploaded_file.name, 'dest': dest}))
 
@@ -309,8 +308,7 @@ def mkdir(request, proj_slug, role_slug):
                                        "Slashes or hashes are not allowed in filenames." % name))
 
             # 权限验证
-            if not request.user.is_superuser and\
-                    not request.user.has_file_permission(request.group, hadoop_path, 'w'):
+            if not get_profile(request.user).has_file_permission(request.group, hadoop_path, 'w'):
                 raise PopupException(_('Permission deny: user %(user) try mkdir  %(name)s to destination %(dest).' 
                                        % {'user': request.user.username, 'name': name, 'dest': path}))
 
@@ -478,7 +476,7 @@ def rmtree(request, proj_slug, role_slug):
         # 验证用户权限
             # 获取文件所在目录的权限
             dirname = posixpath.dirname(arg['path'])
-            if not request.user.is_superuser and not get_profile(request.user).has_file_permission(request.group, dirname, 'w'):
+            if not get_profile(request.user).has_file_permission(request.group, dirname, 'w'):
                 # do more
                 raise PopupException('Permission deny!!')
             # 如果用户是超级用户或者拥有写文件所在目录的写权限即可删除文件
@@ -518,8 +516,7 @@ def download(request, proj_slug, role_slug, path):
         raise PopupException(_("'%(path)s' is not a file.") % {'path': hadoop_path})
 
     # //权限判断
-    if not request.user.is_superuser and \
-            not request.user.has_file_permission(request.group, hadoop_path, 'w'):
+    if not get_profile(request.user).has_file_permission(request.group, hadoop_path, 'w'):
                 raise PopupException(_('Permission deny: user %(user) try download  file %(name)s.' 
                                % {'user': request.user.username, 'name': hadoop_path}))
  
