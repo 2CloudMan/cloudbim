@@ -54,7 +54,8 @@ class GroupMiddleware(object):
                 and 'role_slug' in view_kwargs:
 
             try:
-                request.group = get_profile(request.user).get_group(view_kwargs['proj_slug'], view_kwargs['role_slug'])
+                request.group = request.user.groups.all().filter(groupprofile__project__slug=view_kwargs['proj_slug'],
+                                                                    groupprofile__role__slug=view_kwargs['role_slug']).first()
                 if not request.group:
                     raise Exception('you are not a %s of project %s' % (view_kwargs['proj_slug'],
                                                                         view_kwargs['role_slug']))

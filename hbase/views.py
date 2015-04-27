@@ -34,7 +34,7 @@ from hbase import conf
 from hbase.settings import DJANGO_APPS
 from hbase.api import HbaseApi
 from server.hbase_lib import get_thrift_type
-from admin.models import ensuire_table_info, get_profile
+from admin.models import ensuire_table_info, get_profile, BimHbasePermission
 
 LOG = logging.getLogger(__name__)
 
@@ -106,10 +106,20 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
   result = HbaseApi(request.user).query(*url_params)
   
   # create table info when call method createTable
-  if settings.NEED_PERMISSION and action == 'createTable':
-    ensuire_table_info(request.user, tablename, request.group, action)
-
+  if settings.NEED_PERMISSION:
+      result = result_deal(request, result, tablename, action)
   return api_dump(result)
+
+
+def result_deal(request, result, tablename, action):
+  if action == 'createTable':
+    ensuire_table_info(request.user, tablename, request.group, action)
+  elif action == 'getTableList':
+    perms = request.group.bimhbasepermission_set.all()
+    tables = [perm.table.table for perm in perms]
+    result = [item  for item in result if (item.get('name') in tables)]
+  return result
+
 
 def api_dump(response):
   ignored_fields = ('thrift_spec', '__.+__')

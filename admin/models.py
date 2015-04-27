@@ -213,8 +213,6 @@ FILE_PERM_CHOICES = (
 
 
 TABLE_PERM_CHOICES = (
-    ('i', 'can insert data'),
-    ('d', 'can delete data'),
     ('q', 'can query data'),
     ('qd', 'can query and delete data'),
     ('qi', 'can query and insert'),
