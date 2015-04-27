@@ -33,15 +33,14 @@ from utils.lib.django_util import PopupException, JsonResponse, render
 from hbase import conf
 from hbase.settings import DJANGO_APPS
 from hbase.api import HbaseApi
-from hbase.management.commands import hbase_setup
 from server.hbase_lib import get_thrift_type
-from admin.models import ensuire_table_info, get_group_table_permission, get_profile
+from admin.models import ensuire_table_info, get_profile, BimHbasePermission
 
 LOG = logging.getLogger(__name__)
 
 
 def has_write_access(user):
-  return user.is_superuser or user.has_hue_permission(action="write", app=DJANGO_APPS[0])
+    return True
 
 def app(request, proj_slug, role_slug):
     # should give a table name
@@ -94,12 +93,11 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
     need_perm = action_perm_required(action)
     tablename = url_params[2] if len(url_params) > 2 else None
     if not get_profile(request.user).has_hbase_permission(request.group, tablename, need_perm):
-      LOG.info('Permission deny! : user %s try to %s table %s' %
-                            (request.user.username, action, tablename))
+      LOG.info('Permission deny! : user %s try to %s table %s without permission %s' %
+                            (request.user.username, action, tablename, need_perm))
+      print 'Permission deny! : user %s try to %s table %s without permission %s' %\
+                            (request.user.username, action, tablename, need_perm)
       return JsonResponse({'error': 'Permission deny!'}, status=403)
- 
-#   # create or clear table info when needed
-#   ensuire_table_info(request.user, tablename, request.group, action)
 
   if request.POST.get('dest', False):
     url_params += [request.FILES.get(request.REQUEST.get('dest'))]
@@ -108,10 +106,20 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
   result = HbaseApi(request.user).query(*url_params)
   
   # create table info when call method createTable
-  if settings.NEED_PERMISSION and action == 'createTable':
-    ensuire_table_info(request.user, tablename, request.group, action)
-
+  if settings.NEED_PERMISSION:
+      result = result_deal(request, result, tablename, action)
   return api_dump(result)
+
+
+def result_deal(request, result, tablename, action):
+  if action == 'createTable':
+    ensuire_table_info(request.user, tablename, request.group, action)
+  elif action == 'getTableList':
+    perms = request.group.bimhbasepermission_set.all()
+    tables = [perm.table.table for perm in perms]
+    result = [item  for item in result if (item.get('name') in tables)]
+  return result
+
 
 def api_dump(response):
   ignored_fields = ('thrift_spec', '__.+__')
@@ -161,19 +169,3 @@ def api_dump(response):
     'truncated': True,
     'limit': trunc_limit,
     })
-
-
-def install_examples(request):
-  result = {'status': -1, 'message': ''}
-
-  if request.method != 'POST':
-    result['message'] = _('A POST request is required.')
-  else:
-    try:
-      hbase_setup.Command().handle(user=request.user)
-      result['status'] = 0
-    except Exception, e:
-      LOG.exception(e)
-      result['message'] = str(e)
-
-  return JsonResponse(result)

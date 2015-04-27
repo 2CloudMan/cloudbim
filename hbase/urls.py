@@ -23,5 +23,4 @@ urlpatterns = patterns('hbase.views',
   url(r'^$', 'app', name='index'),
   url(r'api/(?P<url>.+)$', 'api_router'),
 
-  url(r'^install_examples$', 'install_examples', name='install_examples'),
 )

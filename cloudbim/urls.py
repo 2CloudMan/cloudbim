@@ -16,7 +16,7 @@ urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'cloudbim.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
-
+    url(r'^$', 'auth.views.dt_login'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^auth/', include('auth.urls')),
     url(r'^project/$', 'main.views.index', name='index'),

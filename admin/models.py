@@ -61,7 +61,19 @@ class UserProfile(models.Model):
         # user must be a member of this group
         if not group or not path or not perm:
             return False
+
+        if self.user.is_superuser:
+            return True
+
+        if path.endswith('/'):
+            path = path[:-1]
+
+        if perm in 'r' and get_project_dir(group.groupprofile.project) == path:
+            return True
         
+        if get_proj_role_path(group.groupprofile.project, group.groupprofile.role) == path:
+            return True
+
         perm = BimFilePermission.objects.filter(file__path=path,
                                                action__contains=perm).first()
 
@@ -103,7 +115,10 @@ class UserProfile(models.Model):
         projects = set()
         groups = self.get_groups()
         for group in groups:
-            projects.add(get_group_profile(group).project)
+            proj =  get_group_profile(group).project
+            if not proj:
+                continue
+            projects.add(proj)
         return list(projects)
 
     def get_project(self, proj_slug):
@@ -187,7 +202,7 @@ class TableInfo(models.Model):
         ]
 
     def __str__(self):
-        return "%s:%s(%d)" % (self.table, self.creator, self.pk)
+        return "%s:%s" % (self.table, self.creator)
 
 
 FILE_PERM_CHOICES = (
@@ -198,8 +213,6 @@ FILE_PERM_CHOICES = (
 
 
 TABLE_PERM_CHOICES = (
-    ('i', 'can insert data'),
-    ('d', 'can delete data'),
     ('q', 'can query data'),
     ('qd', 'can query and delete data'),
     ('qi', 'can query and insert'),
@@ -238,7 +251,7 @@ class FileInfo(models.Model):
     path = models.CharField(max_length=255, unique=True)  # 使用linux最大文件路径长度
     owner = models.ForeignKey(auth_models.User)
     group = models.ForeignKey(auth_models.Group)
-    
+
     class Meta:
         index_together = [
             ["path"],
@@ -284,6 +297,7 @@ def clear_file_info(path):
 
         # 删除文件信息
         FileInfo.objects.get(path=path).delete()
+
     except Exception as e:
         LOG.error("File info clear failed! ", exc_info=e) 
         transaction.rollback()
@@ -292,8 +306,8 @@ def clear_file_info(path):
 
 
 @transaction.commit_manually
-def ensure_new_fileinfo(path, owner, group):
-    if FileInfo.objects.filter(path=path).count() > 0:
+def ensure_new_fileinfo(path, owner, group, is_dir=True):
+    if FileInfo.objects.filter(path=path).exists():
         return
 
     try:
@@ -302,8 +316,14 @@ def ensure_new_fileinfo(path, owner, group):
         file.save()
 
         # init file permission
-        perm = BimFilePermission(file=file, action='rwx',
-                                 creator=owner, description='group of file owner')
+        # 安装创建的文件类型来初始化权限
+        if is_dir:
+            perm = BimFilePermission(file=file, action=settings.INIT_DIR_PERM_OWN_GRP,
+                                     creator=owner, description='group of file owner')
+        else:
+            perm = BimFilePermission(file=file, action=settings.INIT_FILE_PERM_OWN_GRP,
+                                     creator=owner, description='group of file owner')
+
         perm.save()
         perm.groups.add(group)
         perm.save()
@@ -454,34 +474,18 @@ def get_default_user_group(**kwargs):
         return group
 
 
-def install_sample_user():
-  """
-  Setup the de-activated sample user with a certain id. Do not create a user profile.
-  """
+def get_proj_role_path(project, role):
+    if not project or not role:
+        return ''
+    proj_dir = get_project_dir(project)
+    role_dir = role.role_directory
+    path = proj_dir + (role_dir if role_dir and role_dir.startswith('/') else '/%s' % role.slug)
+    return path
 
-  try:
-    user = auth_models.User.objects.get(username=SAMPLE_USERNAME)
-  except auth_models.User.DoesNotExist:
-    try:
-      user = auth_models.User.objects.create(username=SAMPLE_USERNAME, password='!', is_active=False, is_superuser=False, id=1100713, pk=1100713)
-      LOG.info('Installed a user called "%s"' % (SAMPLE_USERNAME,))
-    except Exception, e:
-      LOG.info('Sample user race condition: %s' % e)
-      user = auth_models.User.objects.get(username=SAMPLE_USERNAME)
-      LOG.info('Sample user race condition, got: %s' % user)
-
-  fs = cluster.get_hdfs()
-  fs.do_as_user(SAMPLE_USERNAME, fs.create_home_dir)
-
-  return user
-
-
-def ensure_proj_role_directory(fs, proj_slug, role_slug):
-    proj_dir =  settings.HADOOP_PROJECT_DIR + proj_slug
-    role_dir = proj_dir + '/%s' % role_slug
-
-    fs.do_as_superuser(fs.create_proj_dir, proj_dir)
-    fs.do_as_superuser(fs.create_role_dir, role_dir)
+def ensure_proj_role_directory(fs, project, role):
+    path = get_proj_role_path(project, role)
+    if path:
+        fs.do_as_superuser(fs.create_role_dir, path)
 
 
   # create or clear table info when needed
@@ -495,10 +499,14 @@ def ensuire_table_info(user, tablename, group, action):
             
             # create permission
             perm = BimHbasePermission(table=table, action='qi', creator=user)
-            perm.group.add(group)
             perm.save()
+
+            perm.groups.add(group)
+            perm.save()
+            LOG.info('user %s of group %s: table %s  info created!' % (user.username, group.name, tablename))
         except Exception as e:
-            LOG.error("user %s of group %s: table info create failed!: %s" % (user, group, e)) 
+            LOG.error("user %s of group %s: table info create failed!: %s" % (user.username, group.name, e)) 
+            print e
             transaction.rollback()
         else:
             transaction.commit()

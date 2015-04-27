@@ -367,13 +367,13 @@ class GroupProfileForm(forms.ModelForm):
     def clean(self):
         if self.cleaned_data["project"] and self.cleaned_data['role']:
             # create the project's role directory on hadoop and create name by project and role
-            proj_slug = self.cleaned_data['project'].slug
-            role_slug = self.cleaned_data['role'].slug
+            proj = self.cleaned_data['project']
+            role = self.cleaned_data['role']
 
             #create a default filesystem
             fs = cluster.get_hdfs("default")
             
             # make a directory if it doesn't exit
-            ensure_proj_role_directory(fs, proj_slug, role_slug)
+            ensure_proj_role_directory(fs, proj, role)
             
         return self.cleaned_data

@@ -200,7 +200,13 @@ HBASE_QUERY_PERM = 'q'
 HBASE_INSERT_PERM = 'i'
 HBASE_DELETE_PERM = 'd'
 
-NEED_PERMISSION=False
+NEED_PERMISSION=True
+
+INIT_FILE_PERM_OWN_GRP = 'rw'
+INIT_FILE_PERM_PROJ_GRP = 'rw' 
+INIT_DIR_PERM_OWN_GRP='rw'
+INIT_DIR_PERM_PROJ_GRP = 'rw'
+
 # Keep default values up to date
 TEMPLATE_CONTEXT_PROCESSORS = (
   'django.contrib.auth.context_processors.auth',
