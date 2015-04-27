@@ -72,8 +72,9 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/auth/login')
-    
+    print path
     project_home, hadoop_path = get_hadoop_path(request, path)
+    print hadoop_path
     # 判断给定路径是否是一个目录
     if not request.fs.isdir(hadoop_path):
         Log.warn('user %s try to open a dir user the given path %s but it is not a directory!' %
@@ -82,10 +83,10 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
     # 用户是否有查看目录的权限
     if get_profile(request.user).has_file_permission(request.group, hadoop_path, 'r'):
-        dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, hadoop_path)
         # Filter
         # 排序
     
+        dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, hadoop_path)
         breadcrumbs = parse_breadcrumbs(path)
  
         # 分页
@@ -97,11 +98,9 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
         files = [ _massage_stats(request, s, project_home) for s in shown_stats ]
         page = _massage_page(page)
-        print files
         proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
         data = \
         {
-            'user' : request.user,
             'curr_proj': proj_slug,
             'curr_role': role_slug,
             'project': proj_info,
@@ -125,6 +124,8 @@ def listdir_paged(request, proj_slug, role_slug, path):
     format = request.GET.get('format', None)
     if format == 'json':
         return JsonResponse(data)
+    
+    data['user'] = request.user
     return render('listdir.mako', request, data)
 
 
@@ -152,7 +153,6 @@ def _massage_stats(request, stats, cur_path):
         Log.warn("Can't find file info of File %s" % path)
 
     return {
-        'user': request.user,
         'name': stats['name'],
         'path': relpath,
         'owner': owner,
