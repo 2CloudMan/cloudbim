@@ -35,27 +35,14 @@ ${ commonheader(user) | n,unicode }
           </div>
         %endif
 
-        <div class="input-prepend
-          % if backend_name == 'OAuthBackend':
-            hide
-          % endif
-        ">
-          <span class="add-on"><i class="fa fa-user"></i></span>
-          ${ form['username'] | n,unicode }
-        </div>
-
+        <div style="margin: 0px auto">
+        ${ form['username'] | n,unicode }
         ${ form['username'].errors | n,unicode }
 
-        <div class="input-prepend
-          % if backend_name in ('AllowAllBackend', 'OAuthBackend'):
-            hide
-          % endif
-        ">
-          <span class="add-on"><i class="fa fa-lock"></i></span>
-          ${ form['password'] | n,unicode }
-        </div>
-        ${ form['password'].errors | n,unicode }
 
+        ${ form['password'] | n,unicode }
+        ${ form['password'].errors | n,unicode }
+        </div>
         %if active_directory:
         <div class="input-prepend">
           <span class="add-on"><i class="fa fa-globe"></i></span>
