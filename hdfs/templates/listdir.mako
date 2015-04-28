@@ -98,7 +98,7 @@ ${ commonheader(user) | n,unicode }
         <div id="uploadFileModal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="myModalLabel">上传至: ${path}</h4>
+            <h4 class="modal-title" id="myModalLabel">Upload To: ${path}</h4>
           </div>
 
           <div class="modal-body">
@@ -124,11 +124,11 @@ ${ commonheader(user) | n,unicode }
         <div class="modal fade" id="createDirModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
               <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">创建目录 in ${path}</h4>
+                <h4 class="modal-title" id="myModalLabel">Create Directory in ${path}</h4>
               </div>
               <div class="modal-body">
                   <form id="createDirForm" action="" data-bind="submit: createDirectory" method="post">
-                    <label for="dirName">目录名</label>
+                    <label for="dirName">DirectoryName</label>
                     <input id="newDirNameInput" type="text" class="form-control"  name="dir_name" placeholder="">
                     <input type='hidden' class="hidden-field" name="dest" data-bind="value: currentDirPath()" />
                     <button type="submit" class="btn btn-default">submit</button>
@@ -144,14 +144,14 @@ ${ commonheader(user) | n,unicode }
             <div class="modal-content">
               <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">确定删除这些文件吗?</h4>
+                <h4 class="modal-title" id="myModalLabel">Confirm to delete these files?</h4>
               </div>
 
               <div class="modal-body">
 
               <form id="deleteForm" action="" method="post">
-                <button type="cancel" class="btn btn-default" style="margin-top: 10px">取消</button>
-                <button type="submit" class="btn btn-default btn-danger" style="margin-top: 10px">确定</button>
+                <button type="cancel" class="btn btn-default" style="margin-top: 10px">Cancel</button>
+                <button type="submit" class="btn btn-default btn-danger" style="margin-top: 10px">Confirm</button>
               </form>
 
               </div>

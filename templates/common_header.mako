@@ -29,6 +29,16 @@ from utils.lib.django_mako import static
 
         <script src="${ static('js/cloudbim.js') }"></script>
 
+        <style type="text/css">
+            #error-popup {
+                min-width: 600px;
+                max-width: 800px;
+                top: 0px;
+                margin: 10px auto;
+
+            }
+        </style>
+
     </head>
 <body>
 
@@ -46,6 +56,11 @@ from utils.lib.django_mako import static
             </div>
 
         </div>
+    </div>
+
+    <div id="error-popup" class="alert hidden ">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <p id="error_msg"></p>
     </div>
 
 

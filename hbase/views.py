@@ -24,8 +24,6 @@ import re
 import StringIO
 import urllib
 
-from avro import datafile, io
-
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from utils.lib.django_util import PopupException, JsonResponse, render
@@ -34,7 +32,8 @@ from hbase import conf
 from hbase.settings import DJANGO_APPS
 from hbase.api import HbaseApi
 from server.hbase_lib import get_thrift_type
-from admin.models import ensuire_table_info, get_profile, clear_table_info
+from admin.models import ensuire_table_info, get_profile, clear_table_info,\
+        get_user_proj_roles_info
 
 LOG = logging.getLogger(__name__)
 
@@ -46,10 +45,15 @@ def app(request, proj_slug, role_slug):
     # should give a table name
     # perm = get_group_table_permission(request.group, table)
 
+  proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
   return render('app.mako', request, {
     'user': request.user,
-    'can_write': has_write_access(request.user), 
-    # 'can_wirte': settings.HBASE_INSERT_PERM in perm,
+    'can_write': has_write_access(request.user),
+    'curr_proj': proj_slug,
+    'curr_role': role_slug,
+    'project': proj_info,
+    'roles': roles_info,
+    # 'can_write': settings.HBASE_INSERT_PERM in perm,
     # 'can_delete': settings.HBASE_DELETE_PERM in perm
   })
 
