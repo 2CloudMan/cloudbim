@@ -9,7 +9,7 @@ ${ commonheader(user) | n,unicode }
 <div class="container">
 
 <div>
-   ${ sub.showSubMenu({'name': 'webform'}, 'worker', [], 'tb')}
+   ${ sub.showSubMenu(project, curr_role, roles, 'tb')}
 </div>
 
 <link href="${ static('hbase/css/hbase.css') }" rel="stylesheet" type="text/css" />
@@ -18,7 +18,7 @@ ${ commonheader(user) | n,unicode }
   <table data-datasource="${datasource}" class="table table-striped table-condensed datatables tablescroller-disable" style="padding-left: 0;padding-right: 0">
       <thead>
         <tr>
-          <th width="1%"><div data-bind="click: ${datasource}.toggleSelectAll, css: {hueCheckbox: true, 'fa': true, 'fa-check':${datasource}.selected().length == ${datasource}.items().length && ${datasource}.items().length>0}"></div></th>
+          <th width="1%"><div data-bind="click: ${datasource}.toggleSelectAll, css: {bimCheckbox: true, 'fa': true, 'fa-check':${datasource}.selected().length == ${datasource}.items().length && ${datasource}.items().length>0}"></div></th>
           <!-- ko foreach: ${datasource}.columns() -->
             <th data-bind="text:$data"></th> <!-- need to i18n first -->
           <!-- /ko -->
@@ -91,7 +91,7 @@ ${ commonheader(user) | n,unicode }
 </%def>
 
 <%def name="sortBtn(datasource)">
-  <div class="btn-group">
+  <div class="btn-group hidden">
     <button class="btn" data-bind="click: ${datasource}.toggleSortMode">${_('Sort By')} <i data-bind="text: ${datasource}.sortField(), clickBubble: false"></i> <b data-bind="text: ${datasource}.sortAsc() ? 'ASC' : 'DESC'">ASC</b></button>
     <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="clickBubble: false">
       <span class="caret"></span>
@@ -152,8 +152,8 @@ ${ commonheader(user) | n,unicode }
 
     <script id="itemTemplate" type="text/html">
       <tr>
-        <td><div data-bind="click: $data.select, css: {hueCheckbox: true,'fa': true, 'fa-check':$data.isSelected}" data-row-selector-exclude="true"></div></td>
-        <td width="90%"><a data-bind="text:$data.name,attr: {href: '#'+app.cluster()+'/'+$data.name}" data-row-selector="true"></a></td>
+        <td><div data-bind="click: $data.select, css: {bimCheckbox: true,'fa': true, 'fa-check':$data.isSelected}" data-row-selector-exclude="true"></div></td>
+        <td width="90%"><a data-bind="css: {},text:$data.name,attr: {href: '#'+app.cluster()+'/'+$data.name}" data-row-selector="true"></a></td>
         <td width="5%"><i data-bind="click: $data.toggle, css: {'fa': true, 'fa-check-square':$data.enabled, 'fa-square-o':$data.enabled != true}" data-row-selector-exclude="true"></i></td>
       </tr>
     </script>
@@ -204,7 +204,7 @@ ${ commonheader(user) | n,unicode }
     </script>
     <script id="columnPropertyEmptyTemplate" type="text/html">
       <li class="columnPropertyEmpty" style="width:310px; line-height: 29px">
-        <a class="pointer action_addColumnProperty"><i class="fa fa-plus-circle"></i> ${_('Add a column property')}</a>
+        <a class="pointer action_addColumnProperty hidden"><i class="fa fa-plus-circle"></i> ${_('Add a column property')}</a>
       </li>
     </script>
   </div>
@@ -238,7 +238,7 @@ ${ commonheader(user) | n,unicode }
             <!-- /ko -->
            </span>
             <span class="pull-right">
-              <button class="btn" data-bind="click: function(){views.tabledata.showGrid(!views.tabledata.showGrid());}, clickBubble: false" data-toggle="tooltip" title="${_('Toggle Grid')}"><i class="fa fa-table"></i></button>
+              <button class="btn hidden" data-bind="click: function(){views.tabledata.showGrid(!views.tabledata.showGrid());}, clickBubble: false" data-toggle="tooltip" title="${_('Toggle Grid')}"><i class="fa fa-table"></i></button>
               <input type="text" placeholder="Filter Columns/Families" style="margin-left: 5px;" data-bind="value: app.views.tabledata.columnQuery, clickBubble: false"/>
               <button class="btn" data-bind="click: views.tabledata.toggleSelectAll" style="margin-left: 5px;" data-toggle="tooltip" title="${_('Toggle Select All Rows')}"><i class="fa fa-check-square"></i> ${_('All')}</button>
               ${sortBtn('views.tabledata.sortDropDown')}
@@ -279,7 +279,7 @@ ${ commonheader(user) | n,unicode }
               <a class="btn" data-bind="enable: views.tabledata.selected().length > 0, click: views.tabledata.dropSelected"><i class="fa fa-trash-o"></i> ${_('Drop Rows')}</a>
             % endif
             % if can_write:
-            <a id="bulk-upload-btn" class="btn fileChooserBtn" data-toggle="tooltip" title="${_('.CSV, .TSV, etc...')}" aria-hidden="true"><i class="fa fa-upload"></i> ${_('Bulk Upload')}</a>
+            <a id="bulk-upload-btn" class="btn fileChooserBtn hidden" data-toggle="tooltip" title="${_('.CSV, .TSV, etc...')}" aria-hidden="true"><i class="fa fa-upload"></i> ${_('Bulk Upload')}</a>
             <a href="#new_row_modal" data-bind="click:function(){app.focusModel(app.views.tabledata);launchModal('new_row_modal')}" role="button" class="btn btn-primary" data-callback=""><i class='fa fa-plus-circle'></i> ${_('New Row')}</a>
             % endif
           </span>
