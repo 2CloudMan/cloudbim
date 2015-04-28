@@ -3,7 +3,7 @@ from django.http.response import HttpResponse, HttpResponseRedirect
 from utils.lib.exceptions_renderable import PopupException
 
 import admin
-from admin.models import get_profile, get_group_profile
+from admin.models import get_profile, get_group_profile, get_user_proj_roles_info
 from utils.lib.django_util import render
 from utils.lib import paginator 
 # Create your views here.
@@ -60,6 +60,10 @@ def show(request, proj_slug, role_slug) :
 
 def info(request, proj_slug, role_slug) :
 
+    proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
     return render('info.mako', request, {
-
+        'curr_proj': proj_slug,
+        'curr_role': role_slug,
+        'project': proj_info,
+        'roles': roles_info,
     })

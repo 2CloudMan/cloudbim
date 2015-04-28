@@ -307,7 +307,7 @@ def mkdir(request, proj_slug, role_slug):
 
             # 权限验证
             if not get_profile(request.user).has_file_permission(request.group, hadoop_path, 'w'):
-                raise PopupException(_('Permission deny: user %(user) try mkdir  %(name)s to destination %(dest).' 
+                raise PopupException(_('Permission deny: user %(user)s try mkdir  %(name)s to destination %(dest)s.' 
                                        % {'user': request.user.username, 'name': name, 'dest': path}))
 
             dest = os.path.join(hadoop_path, name)

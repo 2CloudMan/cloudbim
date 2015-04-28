@@ -9,7 +9,7 @@ ${ commonheader(user) | n,unicode }
 <div class="container">
 
     <div>
-       ${ sub.showSubMenu({'name': 'webform'}, 'worker', [], 'info' )}
+       ${ sub.showSubMenu(project, curr_role, roles, 'info' )}
     </div>
 
     <div class="card">

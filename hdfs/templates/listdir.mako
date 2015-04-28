@@ -33,7 +33,7 @@ ${ commonheader(user) | n,unicode }
 
         </div>
 
-        <div class="content" style="padding:20px">
+        <div class="content" style="padding:0 20px 20px">
 
         <table class="table table-striped">
             <thead>
@@ -198,10 +198,10 @@ ${ commonheader(user) | n,unicode }
 
       // Upload Plugin itself
       $('#drag-and-drop-zone').dmUploader({
-        url: '/project/webform/worker/fb/upload/files',
+        url: '/project/${curr_proj}/${curr_role}/fb/upload/files',
         dataType: 'json',
         allowedTypes: '*',
-        extraData:{ 'dest' : '/worker/'},
+        extraData:{ 'dest' : '${path}'},
         onInit: function(){
           add_log('Penguin initialized :)');
         },
