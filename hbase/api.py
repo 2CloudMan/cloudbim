@@ -42,9 +42,10 @@ LOG = logging.getLogger(__name__)
 class HbaseApi(object):
   HBASE_ACTION_PERM_REQUEST={
         r"^(getTableList)|(getCluster(s)?)|(createTable)$": True,
-        r"^(get\w*)|(scan\w*)": settings.HBASE_QUERY_PERM,
-        r"^(put\w*)": settings.HBASE_INSERT_PERM,
-        r"^(delete\w*)": settings.HBASE_DELETE_PERM,
+        r"^(get(\w)*)|(scan(\w)*)": settings.HBASE_QUERY_PERM,
+        r"^(put(\w)*|enable(\w)*)": settings.HBASE_INSERT_PERM,
+        r"^(delete(\w)*|disable(\w)*)": settings.HBASE_DELETE_PERM,
+#         r"(/w)*": True
   }
 
 

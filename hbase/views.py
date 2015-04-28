@@ -32,8 +32,8 @@ from hbase import conf
 from hbase.settings import DJANGO_APPS
 from hbase.api import HbaseApi
 from server.hbase_lib import get_thrift_type
-from admin.models import ensuire_table_info, get_profile, BimHbasePermission
-from admin.models import get_user_proj_roles_info
+from admin.models import ensuire_table_info, get_profile, clear_table_info,\
+        get_user_proj_roles_info
 
 LOG = logging.getLogger(__name__)
 
@@ -116,6 +116,8 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
 def result_deal(request, result, tablename, action):
   if action == 'createTable':
     ensuire_table_info(request.user, tablename, request.group, action)
+  elif action == 'deleteTable':
+    clear_table_info(tablename)
   elif action == 'getTableList':
     perms = request.group.bimhbasepermission_set.all()
     tables = [perm.table.table for perm in perms]
