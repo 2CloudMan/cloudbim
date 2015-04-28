@@ -99,16 +99,14 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
     if not get_profile(request.user).has_hbase_permission(request.group, tablename, need_perm):
       LOG.info('Permission deny! : user %s try to %s table %s without permission %s' %
                             (request.user.username, action, tablename, need_perm))
-      print 'Permission deny! : user %s try to %s table %s without permission %s' %\
-                            (request.user.username, action, tablename, need_perm)
-      return JsonResponse({'error': 'Permission deny!'}, status=403)
+      return JsonResponse({'err_msg': '%s failed: permission deny!' % action, 'code': 403}, status=403)
 
   if request.POST.get('dest', False):
     url_params += [request.FILES.get(request.REQUEST.get('dest'))]
-    
+
   # do
   result = HbaseApi(request.user).query(*url_params)
-  
+
   # create table info when call method createTable
   if settings.NEED_PERMISSION:
       result = result_deal(request, result, tablename, action)

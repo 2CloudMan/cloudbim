@@ -72,9 +72,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/auth/login')
-    print path
     project_home, hadoop_path = get_hadoop_path(request, path)
-    print hadoop_path
     # 判断给定路径是否是一个目录
     if not request.fs.isdir(hadoop_path):
         Log.warn('user %s try to open a dir user the given path %s but it is not a directory!' %
