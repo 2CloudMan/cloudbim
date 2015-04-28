@@ -288,7 +288,6 @@ class BimFilePermission(models.Model):
     def get_object_permission(cls, path, action):
         return BimFilePermission.objects.get(file__path=path, action=action)
 
-
 @transaction.commit_manually
 def clear_file_info(path):
     try:
@@ -303,7 +302,6 @@ def clear_file_info(path):
         transaction.rollback()
     else:
         transaction.commit()
-
 
 @transaction.commit_manually
 def ensure_new_fileinfo(path, owner, group, is_dir=True):
@@ -487,8 +485,23 @@ def ensure_proj_role_directory(fs, project, role):
     if path:
         fs.do_as_superuser(fs.create_role_dir, path)
 
+# clear table info 
+@transaction.commit_manually
+def clear_table_info(tablename):
+    try:
+        # 删除相关权限
+        BimHbasePermission.objects.filter(table__table=tablename).delete()
+        
+        # 删除相关表格信息
+        TableInfo.objects.filter(table=tablename).delete()
+    except Exception as e:
+        LOG.error("Table info clear failed! ", exc_info=e) 
+        transaction.rollback()
+    else:
+        transaction.commit()
 
-  # create or clear table info when needed
+
+# create table info when needed
 @transaction.commit_manually
 def ensuire_table_info(user, tablename, group, action):
     if action == 'createTable':
