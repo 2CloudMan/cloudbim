@@ -6,6 +6,11 @@ padding-top:64px!important;
 .container {
 
 }
+//禁用a-link
+.not-active {
+   pointer-events: none;
+   cursor: default;
+}
 
 .bimCheckbox {
     width: 15px;

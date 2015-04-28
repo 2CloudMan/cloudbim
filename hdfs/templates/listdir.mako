@@ -33,7 +33,7 @@ ${ commonheader(user) | n,unicode }
 
         </div>
 
-        <div class="content" style="padding:20px">
+        <div class="content" style="padding:0 20px 20px">
 
         <table class="table table-striped">
             <thead>

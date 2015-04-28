@@ -11,7 +11,12 @@
                   </a>
                   <ul class="dropdown-menu" role="menu">
                     % for role in roleList:
-                    <li><a href="/project/${curr_proj['slug']}/${role['slug']}/${app}/view">${role['name']}</a></li>
+                    <li>
+                    % if app == 'fb':
+                    <a href="/project/${curr_proj['slug']}/${role['slug']}/${app}/view">${role['name']}</a></li>
+                    % else:
+                    <a href="/project/${curr_proj['slug']}/${role['slug']}/${app}">${role['name']}</a></li>
+                    % endif
                     % endfor
                   </ul>
               </div>
