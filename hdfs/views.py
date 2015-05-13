@@ -84,7 +84,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
         # Filter
         # 排序
     
-        dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, hadoop_path)
+        dir_list = request.fs.do_as_superuser(request.fs.listdir_stats, hadoop_path)
         breadcrumbs = parse_breadcrumbs(path)
  
         # 分页

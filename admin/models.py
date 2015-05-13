@@ -148,10 +148,16 @@ class UserProfile(models.Model):
         return None
 
 class Project(models.Model):
+    # 项目名称，最大长度为80个字符，值唯一
     name = models.CharField(max_length=80, unique=True)
-    project_directory = models.CharField(editable=True, max_length=1024, null=True)
+    # 项目目录，最大长度为1024个字符，可空,值唯一
+    project_directory = models.CharField(editable=True, max_length=1024, null=True, unique=True,
+                                         help_text=('it must under directory %s' % settings.HADOOP_PROJECT_DIR))
+    # 项目创建时间，默认值为项目创建时的时间
     created_time = models.DateTimeField(default=timezone.now)
+    # 项目管理员，外键依赖于用户表
     manager = models.ForeignKey(auth_models.User)
+    # 项目标识，用于唯一标记一个项目
     slug = models.CharField(max_length=60, unique=True)
 
     def __str__(self):
@@ -159,9 +165,13 @@ class Project(models.Model):
 
 
 class Role(models.Model):
+    # 角色名，最大长度为80个字符，值唯一
     name = models.CharField(max_length=80, unique=True)
+    # 角色创建时间，默认值为项目创建时的时间
     create_time = models.DateTimeField(default=timezone.now)
+    # 角色目录，定义角色在项目下的具体目录名称，最大长度1024个字符，可空
     role_directory = models.CharField(editable=True, max_length=1024, null=True, blank=True)
+    # 角色标识，用于唯一标识一个角色
     slug = models.CharField(max_length=60, unique=True)
     
     def __str__(self):
@@ -169,31 +179,23 @@ class Role(models.Model):
 
 
 class GroupProfile(models.Model):
+    # 与组表一对一对应
     group = models.OneToOneField(auth_models.Group)
+    # 与role表外键依赖， 可空
     role = models.ForeignKey(Role, null=True, blank=True)
+    # 与项目表外键依赖， 可空
     project = models.ForeignKey('Project', null=True, blank=True)
     
     def __str__(self):
         return self.group.name
 
-# class GroupPermission(models.Model):
-#     """
-#     Represents the permissions a group has.
-#     """
-#     group = models.ForeignKey(auth_models.Group)
-#     file_perm = models.ForeignKey("BimFilePermission", blank=True, null=True)
-#     hbase_perm = models.ForeignKey('BimHbasePermission', blank=True, null=True)
-#       
-#   
-#     class Meta:
-#         index_together = [
-#             ["group", "file_perm"], ["group", "hbase_perm"]
-#         ]
-
 
 class TableInfo(models.Model):
+    # 表格名称， 最大限制长度为255个字符，值唯一
     table = models.CharField(max_length=255, unique=True)
+    # 表格的创建名称，与用户表外键依赖
     creator = models.ForeignKey(auth_models.User)
+    # 创建者所属的组，与组表外键依赖
     group = models.ForeignKey(auth_models.Group, help_text='the role that table belong for')
 
     class Meta:
@@ -226,11 +228,17 @@ class BimHbasePermission(models.Model):
   
     For now, we only assign permissions to groups, though that may change.
     """
+    # 外键，与表格信息表存在外键依赖
     table = models.ForeignKey(TableInfo)
+    # 操作，定义了可操作的选项，最大限制长度为255个字符
     action = models.CharField(max_length=255, choices=TABLE_PERM_CHOICES)
+    # 描述，最大限制长度为255个字符
     description = models.CharField(max_length=255, blank=True)
+    # 定义与组表的多对多关系
     groups = models.ManyToManyField(auth_models.Group) 
+    # 创建者，外键依赖，与用户是多对一关系
     creator = models.ForeignKey(auth_models.User)
+    # 记录创建时间，默认值为创建记录的系统时间
     create_time = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -343,7 +351,7 @@ def get_group_table_permission(group, table):
             return perm.action
     return ''
     
-    
+
 def group_has_table_permission(group, table, perm):
     if not group or not table or not perm:
         return False
