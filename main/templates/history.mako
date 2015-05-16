@@ -14,34 +14,76 @@ ${ commonheader(user) | n,unicode }
         <div class="span9">
             <div class="card" style="margin-top:0px!important">
                 <div class="card-heading simple">
-                    <form class="form-search">
+
                       <div class="input-append">
-                        <input type="text" class="span12 search-query">
-                        <button type="submit" class="btn">Search</button>
+                        <input type="text" class="span12 search-query" data-bind="value: query">
+                        <button class="btn" data-bind="click: search">Search</button>
                       </div>
-                    </form>
+
+                    <div class="btn-group pull-right">
+                      <a id="selected-type" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                        File
+                        <span class="caret"></span>
+                      </a>
+                      <ul class="dropdown-menu">
+                        <li><a class="file-type" href="#">File</a></li>
+                        <li><a class="db-type" href="#">DB</a></li>
+                      </ul>
+                    </div>
                 </div>
 
                 <div class="card-body">
                     <table class="table table-log">
                         <thead>
                             <th width="15%">Date</th>
-                            <th width="1%">T</th>
                             <th>FilePath</th>
                             <th width="15%">Op</th>
                         </thead>
                         <tbody data-bind="foreach: records">
-                            <tr data-bind="text: date"></tr>
-                            <tr data-bind="text: target_type"></tr>
-                            <tr data-bind="text: target_path"></tr>
-                            <tr data-bind="text: op"></tr>
+                            <tr>
+                            <td data-bind="text: op_time"></td>
+                            <td data-bind="text: target"></td>
+                            <td data-bind="text: op"></td>
+                            </tr>
                         </tbody>
                         <tfoot>
                         </tfoot>
                     </table>
+
+                    <div>
+                        <div class="pagination pull-right">
+                          <ul>
+                            <li data-bind="css: { 'disabled': (page().number === page().previous_page_number || page().num_pages <= 1)}">
+                              <a href="#" aria-label="First">
+                                <i class="fa fa-fast-backward"></i>
+                              </a>
+                            </li>
+                            <li data-bind="css: { 'disabled': (page().number === page().previous_page_number || page().num_pages <= 1)}">
+                              <a href="#" aria-label="Previous">
+                               <i class="fa fa-backward"></i>
+                              </a>
+                            </li>
+                            <li data-bind="css: { 'disabled': (page().number === page().num_pages)}">
+                              <a href="#" aria-label="Next">
+                                <i class="fa fa-forward"></i>
+                              </a>
+                            </li>
+                            <li data-bind="css: { 'disabled': (page().number === page().num_pages)}">
+                              <a href="#" aria-label="Last">
+                                <i class="fa fa-fast-forward"></i>
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div class="form-inline pagination-input-form inline pull-right" style="margin: 20px 10px;">
+                          <span>${_('Page')}</span>
+                          <input type="text" style="width: 40px" data-bind="value: page().number, valueUpdate: 'afterkeydown', event: { change: skipTo }" class="pagination-input" />
+                          <input type="hidden" id="current_page" data-bind="value: page().number" />
+                          of <span data-bind="text: page().num_pages"></span>
+                        </div>
+                    </div>
                 </div>
-
-
             </div>
 
         </div>
@@ -52,13 +94,13 @@ ${ commonheader(user) | n,unicode }
 
     console.log('Setup KO');
 
-    var FileOpRecord = function(record) {
+    var OpRecord = function(record) {
         if(record != null) {
             return {
-                op_time: record.op_time,
-                operation: record.operation,
-                target_path: record.target_path,
-                target_type: record.target_type
+                op_time: record.time,
+                op: record.op,
+                target: record.target,
+                //target_type: record.target_type
             }
         }
 
@@ -79,52 +121,130 @@ ${ commonheader(user) | n,unicode }
           return {}
     };
 
-    var FileOpModal = function(records, page) {
+    var LogModal = function(records, page, type) {
         var self = this;
 
         self.records = ko.observableArray(ko.utils.arrayMap(records, function(record) {
-            return new FileOpRecord(record);
+            return new OpRecord(record);
         }));
 
+        self.curr_type = ko.observable(type)
         self.page = ko.observable(new Page(page));
         self.targetPageNum = ko.observable(1);
         self.targetPageSize = ko.observable(30);
+        self.targetType = ko.observable('file')
         self.query = ko.observable('');
 
-        self.retrieveData() = function() {
-            $.getJSON('/profie/history',{
-                format:json,
-                pagesize: self.targetPageSize,
-                pageNum: self.targetPageNum,
-                query = self.query(),
+        self.resumeDefault = function() {
+            self.targetPageNum(1);
+            self.query('');
+        }
+
+        self.retrieveData = function() {
+
+            location.hash = "#" + self.targetType();
+            if (self.targetPageNum() != 1) {
+                location.hash += ('/' + self.targetPageNum());
             }
+            if (self.query() != '') {
+                location.hash += ("!!" + self.query());
+            }
+
+            $.getJSON('/profile/history',{
+                format:'json',
+                pagesize: self.targetPageSize(),
+                pageNum: self.targetPageNum(),
+                query :self.query(),
+            },
             function(data){
+
+                console.log(data);
 
                 if(data.err){
                     //TODO: dosomething
                     return;
                 }
 
-                self.updateRecords(data.records, data.page);
+                self.updateRecords(data.records, data.page, data.type);
             });
         }
 
-        self.updateRecords =function(records, page) {
+        self.updateRecords =function(records, page, type) {
             self.records(ko.utils.arrayMap(records, function(record){
-                return new FileOpRecord(record);
+                return new OpRecord(record);
             }));
 
-            self.page(nenw Page(page))
+            self.page(new Page(page))
+
+            self.type(type);
         };
+
+
+        self.skipTo = function() {
+            var doc = document,
+            old_page = doc.querySelector('#current_page').value,
+            page = doc.querySelector('.pagination-input');
+
+            if (! isNaN(page.value) && (page.value > 0 && page.value <= self.page().num_pages)) {
+              self.goToPage(page.value);
+            } else {
+              page.value = old_page;
+            }
+        }
+
+        self.goToPage = function(num) {
+            self.targetPageNum(num);
+        }
+
+        self.changeType = function() {
+
+        }
+
+        self.search = function() {
+
+            var queryStr =  self.query().trim
+            if (queryStr != '') {
+                self.retrieveData();
+            }
+        }
     }
 
-    var viewModal = new FileOpModal([], null);
-    ko.applyBinding(viewModal);
+    var viewModal = new LogModal([], null, 'file');
+    ko.applyBindings(viewModal);
 
     $(document).ready(function(){
-        if viewModal {
+        if (viewModal) {
             viewModal.retrieveData();
         }
+
+        $('a.file-type').click(function(event) {
+
+            event.preventDefault();
+
+            if (viewModal) {
+                viewModal.resumeDefault();
+                viewModal.targetType('file');
+                viewModal.retrieveData();
+            }
+
+            $('#selected-type').html("File<span class=\"caret\"></span>");
+
+
+        })
+
+        $('a.db-type').click(function(event) {
+            event.preventDefault();
+
+            if (viewModal) {
+                viewModal.resumeDefault();
+                viewModal.targetType('db');
+                viewModal.retrieveData();
+
+            }
+
+
+            $('#selected-type').html("DB<span class=\"caret\"></span>");
+        })
 
     });
 

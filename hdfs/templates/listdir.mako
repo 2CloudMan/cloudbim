@@ -344,7 +344,7 @@ ${ commonheader(user) | n,unicode }
             new File(file);
         }));
 
-        self.breadcrumbs = ko.observableArray(ko.utils.arrayMap(breadcrumbs, function(breadcrumb){
+        self.breadcrumbs = ko.observableArray(ko.utils.arrayMap(breadcrumbs, function(breadcrumbs){
             return Breadcrumb(breadcrumb);
         }));
 

@@ -98,6 +98,7 @@ def history(request) :
 
     """
     if request.user.is_authenticated():
+
         return render('history.mako', request, {})
     else:
         return HttpResponseRedirect('/auth/login')
