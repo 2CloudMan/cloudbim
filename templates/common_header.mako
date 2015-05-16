@@ -48,7 +48,7 @@ from utils.lib.django_mako import static
                 <a class="brand" href="#">CloudBIM</a>
                 <ul class="nav pull-right">
                 % if user and user.is_authenticated():
-                <li><a href="" class="navbar-link"><i class="fa fa-user"> ${user.username}</i></a></li>
+                <li><a href="/profile" class="navbar-link"><i class="fa fa-user"> ${user.username}</i></a></li>
                 <li><a href="/auth/logout" role="button"><i class="fa fa-sign-out"> Sign Out</i></a></li>
                 % endif
                 </ul>

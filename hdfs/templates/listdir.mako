@@ -217,6 +217,7 @@ ${ commonheader(user) | n,unicode }
         },
         onComplete: function(){
           add_log('All pending tranfers finished');
+
         },
         onUploadProgress: function(id, percent){
           var percentStr = percent + '%';
@@ -343,7 +344,7 @@ ${ commonheader(user) | n,unicode }
             new File(file);
         }));
 
-        self.breadcrumbs = ko.observableArray(ko.utils.arrayMap(breadcrumbs, function(breadcrumbs){
+        self.breadcrumbs = ko.observableArray(ko.utils.arrayMap(breadcrumbs, function(breadcrumb){
             return Breadcrumb(breadcrumb);
         }));
 
@@ -537,6 +538,11 @@ ${ commonheader(user) | n,unicode }
             //}
 
             return true;
+        });
+
+        $("#uploadFileModal").on('hide', function(){
+            //console.log('Refresh');
+            //location.href=/project/${curr_proj}/${curr_role}/fb/view${path};
         });
       });
 
