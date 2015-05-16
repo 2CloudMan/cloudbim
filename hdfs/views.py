@@ -84,7 +84,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
         # Filter
         # 排序
     
-        dir_list = request.fs.do_as_user(request.user.username, request.fs.listdir_stats, hadoop_path)
+        dir_list = request.fs.do_as_superuser(request.fs.listdir_stats, hadoop_path)
         breadcrumbs = parse_breadcrumbs(path)
  
         # 分页
@@ -313,7 +313,7 @@ def mkdir(request, proj_slug, role_slug):
 
             # 权限验证
             if not get_profile(request.user).has_file_permission(request.group, hadoop_path, 'w'):
-                raise PopupException(_('Permission deny: user %(user) try mkdir  %(name)s to destination %(dest).' 
+                raise PopupException(_('Permission deny: user %(user)s try mkdir  %(name)s to destination %(dest)s.' 
                                        % {'user': request.user.username, 'name': name, 'dest': path}))
 
             dest = os.path.join(hadoop_path, name)

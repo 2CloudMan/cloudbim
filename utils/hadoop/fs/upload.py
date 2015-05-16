@@ -66,7 +66,7 @@ class HDFStemporaryUploadedFile(object):
       raise HDFSerror("No HDFS found")
 
     # We want to set the user to be the user doing the upload
-    self._fs.setuser(request.user.username)
+    self._fs.setuser(self._fs.superuser)
     self._path = self._fs.mkswap(name, suffix='tmp', basedir=destination)
 
     if self._fs.exists(self._path):
