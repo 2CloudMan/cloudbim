@@ -225,9 +225,6 @@ def upload_file(request, proj_slug, role_slug) :
                 hdfs_file.remove()
     else:
         response['data'] = _('A POST request is required.')
-
-
-
     return HttpResponse(json.dumps(response), content_type="text/plain")
 
 
@@ -271,7 +268,7 @@ def _upload_file(request):
             response['status'] = 0
 
             # 为文件创建权限
-            ensure_new_fileinfo(dest, request.user, request.group)
+            ensure_new_fileinfo(dest, request)
 
         except IOError, ex:
             already_exists = False
@@ -321,7 +318,7 @@ def mkdir(request, proj_slug, role_slug):
                 request.fs.do_as_superuser(request.fs.mkdir, dest)
 
                 # 为文件创建权限
-                ensure_new_fileinfo(dest, request.user, request.group)
+                ensure_new_fileinfo(dest, request)
             except Exception as e:
                 raise PopupException("Mkdir failed!: user %s try to mkdir in path %s" 
                                      % (request.user.username, dest))
@@ -486,7 +483,7 @@ def rmtree(request, proj_slug, role_slug):
             # 如果用户是超级用户或者拥有写文件所在目录的写权限即可删除文件
             request.fs.do_as_superuser(request.fs.rmtree, arg['path'], 'skip_trash' in request.GET)
             # 暂时不能地柜删除文件，所以这里清理信息无需考虑递归清理
-            clear_file_info(arg['path'])
+            clear_file_info(request, arg['path'])
 
     return generic_op(RmTreeFormSet, request, bulk_rmtree, ["path"], None,
                       data_extractor=formset_data_extractor(recurring, params),

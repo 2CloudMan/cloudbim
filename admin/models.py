@@ -9,6 +9,9 @@ from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _t
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
+from django.utils.encoding import force_text
+from django.contrib.admin.models import DELETION, ADDITION, CHANGE
 
 from utils.lib.exceptions_renderable import PopupException
 from utils.hadoop import cluster
@@ -19,27 +22,20 @@ from django.utils.encoding import python_2_unicode_compatible
 # Create your models here.
 LOG = logging.getLogger(__name__)
 
+
+class UserLog(models.Model):
+    action_time = models.DateTimeField(_('action time'), auto_now=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    content_type = models.ForeignKey(ContentType, blank=True, null=True)
+    object_id = models.TextField(_('object id'), blank=True, null=True)
+    object_repr = models.CharField(_('object repr'), max_length=200)
+    action_flag = models.PositiveSmallIntegerField(_('action flag'))
+    change_message = models.TextField(_('change message'), blank=True)
+    
+    def get_action(self):
+        pass
+
 class UserProfile(models.Model):
-    """
-    WARNING: Some of the columns in the UserProfile object have been added
-    via south migration scripts. During an upgrade that modifies this model,
-    the columns in the django ORM database will not match the
-    actual object defined here, until the latest migration has been executed.
-    The code that does the actual UserProfile population must reside in the most
-    recent migration that modifies the UserProfile model.
-    
-    for user in User.objects.all():
-      try:
-        p = orm.UserProfile.objects.get(user=user)
-      except orm.UserProfile.DoesNotExist:
-        create_profile_for_user(user)
-    
-    IF ADDING A MIGRATION THAT MODIFIES THIS MODEL, MAKE SURE TO MOVE THIS CODE
-    OUT OF THE CURRENT MIGRATION, AND INTO THE NEW ONE, OR UPGRADES WILL NOT WORK
-    PROPERLY
-    """
-    # Enum for describing the creation method of a user.
-    
     user = models.ForeignKey(auth_models.User, unique=True)
     home_directory = models.CharField(editable=True, max_length=1024, null=True)
     is_usermanager = models.BooleanField(_('user manager status'), default=False,
@@ -146,7 +142,57 @@ class UserProfile(models.Model):
         if first_grp:
             return get_group_profile(first_grp).role
         return None
+    
+    def userlog_addition(self, object):
+        """
+        Log that an object has been successfully added.
 
+        The default implementation creates an  user Log record object.
+        """
+        ul = UserLog(
+            user_id=self.user.pk,
+            content_type_id=ContentType.objects.get_for_model(object).pk,
+            object_id=object.pk,
+            object_repr=force_text(object),
+            action_flag=ADDITION
+        )
+        ul.save()
+
+    def userlog_change(self, object, message):
+        """
+        Log that an object has been successfully changed.
+
+        The default implementation creates an user Log record object.
+        """
+        ul = UserLog(
+            user_id=self.user.pk,
+            content_type_id=ContentType.objects.get_for_model(object).pk,
+            object_id=object.pk,
+            object_repr=force_text(object),
+            action_flag=CHANGE,
+            change_message=message
+        )
+        ul.save()
+
+    def userlog_deletion(self, object):
+        """
+        Log that an object will be deleted. Note that this method is called
+        before the deletion.
+
+        The default implementation creates an user Log record object.
+        """
+        ul = UserLog(
+            user_id=self.user.pk,
+            content_type_id=ContentType.objects.get_for_model(object).pk,
+            object_id=object.pk,
+            object_repr=force_text(object),
+            action_flag=DELETION,
+        )
+        ul.save()
+
+    def get_userlog(self):
+        return UserLog.objects.filter(user_id=self.user.pk)
+        
 class Project(models.Model):
     # 项目名称，最大长度为80个字符，值唯一
     name = models.CharField(max_length=80, unique=True)
@@ -204,7 +250,7 @@ class TableInfo(models.Model):
         ]
 
     def __str__(self):
-        return "%s:%s" % (self.table, self.creator)
+        return self.table
 
 
 FILE_PERM_CHOICES = (
@@ -297,14 +343,19 @@ class BimFilePermission(models.Model):
         return BimFilePermission.objects.get(file__path=path, action=action)
 
 @transaction.commit_manually
-def clear_file_info(path):
+def clear_file_info(request, path):
     try:
         # 删除文件相关权限
         BimFilePermission.objects.filter(file__path=path).delete()
 
-        # 删除文件信息
-        FileInfo.objects.get(path=path).delete()
+        # 获取文件信息
+        file = FileInfo.objects.get(path=path)
 
+        # 添加用户日志
+        get_profile(request.user).userlog_deletion(request, file)
+        
+        # 删除文件信息
+        file.delete()
     except Exception as e:
         LOG.error("File info clear failed! ", exc_info=e) 
         transaction.rollback()
@@ -312,29 +363,32 @@ def clear_file_info(path):
         transaction.commit()
 
 @transaction.commit_manually
-def ensure_new_fileinfo(path, owner, group, is_dir=True):
+def ensure_new_fileinfo(path, request, is_dir=True):
     if FileInfo.objects.filter(path=path).exists():
         return
 
     try:
         # create file info
-        file = FileInfo(path=path, owner=owner, group=group)
+        file = FileInfo(path=path, owner=request.user, group=request.group)
         file.save()
 
         # init file permission
         # 安装创建的文件类型来初始化权限
         if is_dir:
             perm = BimFilePermission(file=file, action=settings.INIT_DIR_PERM_OWN_GRP,
-                                     creator=owner, description='group of file owner')
+                                     creator=request.user, description='group of file owner')
         else:
             perm = BimFilePermission(file=file, action=settings.INIT_FILE_PERM_OWN_GRP,
-                                     creator=owner, description='group of file owner')
+                                     creator=request.user, description='group of file owner')
 
         perm.save()
-        perm.groups.add(group)
+        perm.groups.add(request.group)
         perm.save()
+        
+        # 添加用户日志
+        get_profile(request.user).userlog_addition(request, file)
     except Exception as e:
-        LOG.error("user %s of group %s: file info create failed!: %s" % (owner, group, e)) 
+        LOG.error("user %s of group %s: file info create failed!: %s" % (request.user, request.group, e)) 
         transaction.rollback()
     else:
         transaction.commit()

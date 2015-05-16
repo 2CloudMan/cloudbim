@@ -98,6 +98,8 @@ def history(request) :
 
     """
     if request.user.is_authenticated():
+        user_logs = get_profile(request.user).get_userlog()
+        records = [dict(op=log.action_flag ,time=log.action_time, target=log.object_repr) for log in user_logs]
         return render('history.mako', request, {})
     else:
         return HttpResponseRedirect('/auth/login')
