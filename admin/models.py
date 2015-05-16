@@ -151,7 +151,7 @@ class Project(models.Model):
     # 项目名称，最大长度为80个字符，值唯一
     name = models.CharField(max_length=80, unique=True)
     # 项目目录，最大长度为1024个字符，可空,值唯一
-    project_directory = models.CharField(editable=True, max_length=1024, null=True, unique=True,
+    project_directory = models.CharField(editable=True, max_length=255, null=True, unique=True,
                                          help_text=('it must under directory %s' % settings.HADOOP_PROJECT_DIR))
     # 项目创建时间，默认值为项目创建时的时间
     created_time = models.DateTimeField(default=timezone.now)
