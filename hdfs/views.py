@@ -202,6 +202,8 @@ def upload_file(request, proj_slug, role_slug) :
          file ：
     """
 
+    next = request.GET.get("next", request.POST.get("next", None))
+
 
     response = {'status': -1, 'data': ''}
     
@@ -213,6 +215,8 @@ def upload_file(request, proj_slug, role_slug) :
         try:
             resp = _upload_file(request)
             response.update(resp)
+            if next:
+                return HttpResponseRedirect(next)
         except Exception, ex:
             response['data'] = str(ex)
             Log.error('file upload fail')  # 需要更详细的描述
@@ -221,6 +225,8 @@ def upload_file(request, proj_slug, role_slug) :
                 hdfs_file.remove()
     else:
         response['data'] = _('A POST request is required.')
+
+
 
     return HttpResponse(json.dumps(response), content_type="text/plain")
 

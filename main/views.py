@@ -67,3 +67,37 @@ def info(request, proj_slug, role_slug) :
         'project': proj_info,
         'roles': roles_info,
     })
+
+def profile(request):
+    if request.user.is_authenticated():
+        return render('profile.mako', request, {})
+    else:
+        return HttpResponseRedirect('/auth/login')
+
+
+def history(request) :
+    """
+    pagesize:
+    pagenum:
+    query: 搜索关键字
+    format:
+    type: 请求log类型：【file/db】
+
+    {
+    records:[
+        {
+            'op':
+            'time':
+            'target':
+            'type':[file|dir|table]
+        }
+    ],
+    page:
+    type:
+    }
+
+    """
+    if request.user.is_authenticated():
+        return render('history.mako', request, {})
+    else:
+        return HttpResponseRedirect('/auth/login')

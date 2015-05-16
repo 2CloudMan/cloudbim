@@ -25,4 +25,7 @@ urlpatterns = patterns('',
     url(r'^project/(?P<proj_slug>\w+)/(?P<role_slug>\w+)/info$', 'main.views.info'),
     url(r'^project/(?P<proj_slug>\w+)/(?P<role_slug>\w+)/fb/', include('hdfs.urls')),
     url(r'^project/(?P<proj_slug>\w+)/(?P<role_slug>\w+)/tb/', include('hbase.urls')),
+
+    url(r'^profile/$', 'main.views.profile', name='profile'),
+    url(r'^profile/history', 'main.views.history', name='history'),
 )
