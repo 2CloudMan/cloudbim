@@ -99,11 +99,12 @@ def history(request) :
     """
     if request.user.is_authenticated():
         type = request.GET.get('type', '')
+        query = request.GET.get('query', None)
         pagenum = int(request.GET.get('pagenum', 1))
         pagesize = int(request.GET.get('pagesize', 30))
-        
-        user_logs = get_profile(request.user).get_userlog()
-        records = [dict(op=log.action_flag ,time=log.action_time.strftime('%Y-%m-%d %H:%M:%S'),
+
+        user_logs = get_profile(request.user).get_userlog(query, type)
+        records = [dict(op=log.change_message ,time=log.action_time.strftime('%Y-%m-%d %H:%M:%S'),
                          target=log.object_repr) for log in user_logs]
 
         page = paginator.Paginator(records, pagesize).page(pagenum)

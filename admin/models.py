@@ -140,8 +140,26 @@ class UserProfile(models.Model):
         if first_grp:
             return get_group_profile(first_grp).role
         return None
+
+    def userlog_download(self, object, message):
+        """
+        Log that an object has been successfully added.
+
+        The default implementation creates an  user Log record object.
+        """
+        DOWNLOAD = 4
+        ul = UserLog(
+            user_id=self.user.pk,
+            content_type_id=ContentType.objects.get_for_model(object).pk,
+            object_id=object.pk,
+            object_repr=force_text(object),
+            action_flag=DOWNLOAD,
+            change_message = message
+        )
+        ul.save()
+
     
-    def userlog_addition(self, object):
+    def userlog_addition(self, object, message):
         """
         Log that an object has been successfully added.
 
@@ -152,7 +170,8 @@ class UserProfile(models.Model):
             content_type_id=ContentType.objects.get_for_model(object).pk,
             object_id=object.pk,
             object_repr=force_text(object),
-            action_flag=ADDITION
+            action_flag=ADDITION,
+            change_message = message
         )
         ul.save()
 
@@ -172,7 +191,7 @@ class UserProfile(models.Model):
         )
         ul.save()
 
-    def userlog_deletion(self, object):
+    def userlog_deletion(self, object, message):
         """
         Log that an object will be deleted. Note that this method is called
         before the deletion.
@@ -185,11 +204,21 @@ class UserProfile(models.Model):
             object_id=object.pk,
             object_repr=force_text(object),
             action_flag=DELETION,
+            change_message=message
         )
         ul.save()
 
-    def get_userlog(self):
-        return UserLog.objects.filter(user_id=self.user.pk)
+    def get_userlog(self, query, type):
+        log = UserLog.objects.filter(user_id=self.user.pk)
+        if query:
+            log = log.filter(object_repr__contains=query)
+
+        type = ContentType.objects.filter(model=type).first()
+        if not type:
+            return []
+        log = log.filter(content_type_id=type.id)
+
+        return log
         
 class Project(models.Model):
     # 项目名称，最大长度为80个字符，值唯一
@@ -350,7 +379,8 @@ def clear_file_info(request, path):
         file = FileInfo.objects.get(path=path)
 
         # 添加用户日志
-        get_profile(request.user).userlog_deletion(request, file)
+        msg = 'file delete'
+        get_profile(request.user).userlog_deletion(request, file, msg)
         
         # 删除文件信息
         file.delete()
@@ -384,7 +414,8 @@ def ensure_new_fileinfo(path, request, is_dir=True):
         perm.save()
         
         # 添加用户日志
-        get_profile(request.user).userlog_addition(request, file)
+        msg = 'file add'
+        get_profile(request.user).userlog_addition(request, file, msg)
     except Exception as e:
         LOG.error("user %s of group %s: file info create failed!: %s" % (request.user, request.group, e)) 
         transaction.rollback()

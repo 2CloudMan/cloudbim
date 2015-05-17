@@ -510,17 +510,20 @@ def download(request, proj_slug, role_slug, path):
     """
     path = Hdfs.normpath(path)
     proj_home, hadoop_path = get_hadoop_path(request, path)
+    file = FileInfo.objects.filter(path=hadoop_path),first()
 
-    if not request.fs.exists(hadoop_path):
+    if not request.fs.exists(hadoop_path) and file:
         raise Http404(_("File not found: %(path)s.") % {'path': escape(hadoop_path)})
     if not request.fs.isfile(hadoop_path):
         raise PopupException(_("'%(path)s' is not a file.") % {'path': hadoop_path})
 
     # //权限判断
-    if not get_profile(request.user).has_file_permission(request.group, hadoop_path, 'w'):
-                raise PopupException(_('Permission deny: user %(user) try download  file %(name)s.' 
+    profile = get_profile(request.user)
+    if not profile.has_file_permission(request.group, hadoop_path, 'w'): raise PopupException(_('Permission deny: user %(user) try download  file %(name)s.' 
                                % {'user': request.user.username, 'name': hadoop_path}))
  
+    # 添加用户日志
+    profile.userlog_download(request, file, 'file download')
     content_type = mimetypes.guess_type(hadoop_path)[0] or 'application/octet-stream'
     stats = request.fs.stats(hadoop_path)
     mtime = stats['mtime']
