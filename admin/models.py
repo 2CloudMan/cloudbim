@@ -32,8 +32,6 @@ class UserLog(models.Model):
     action_flag = models.PositiveSmallIntegerField(_('action flag'))
     change_message = models.TextField(_('change message'), blank=True)
     
-    def get_action(self):
-        pass
 
 class UserProfile(models.Model):
     user = models.ForeignKey(auth_models.User, unique=True)

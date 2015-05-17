@@ -98,8 +98,30 @@ def history(request) :
 
     """
     if request.user.is_authenticated():
+        type = request.GET.get('type', '')
+        pagenum = int(request.GET.get('pagenum', 1))
+        pagesize = int(request.GET.get('pagesize', 30))
+        
         user_logs = get_profile(request.user).get_userlog()
-        records = [dict(op=log.action_flag ,time=log.action_time, target=log.object_repr) for log in user_logs]
-        return render('history.mako', request, {})
+        records = [dict(op=log.action_flag ,time=log.action_time.strftime('%Y-%m-%d %H:%M:%S'),
+                         target=log.object_repr) for log in user_logs]
+
+        page = paginator.Paginator(records, pagesize).page(pagenum)
+        page = _massage_page(page)
+
+        return render('history.mako', request, dict(records=records, type=type,page=page))
     else:
         return HttpResponseRedirect('/auth/login')
+    
+
+def _massage_page(page):
+    return {
+        'number': page.number,
+        'num_pages': page.num_pages(),
+        'previous_page_number': page.previous_page_number(),
+        'next_page_number': page.next_page_number(),
+        'start_index': page.start_index(),
+        'end_index': page.end_index(),
+        'total_count': page.total_count()
+    }
+
