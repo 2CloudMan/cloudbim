@@ -1,30 +1,4 @@
-#!/usr/bin/env python
-# Licensed to Cloudera, Inc. under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  Cloudera, Inc. licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-"""
-Classes for a custom upload handler to stream into HDFS.
-
-Note that since our middlewares inspect request.POST, we cannot inject a custom
-handler into a specific view. Therefore we always use the HDFSfileUploadHandler,
-which is triggered by a magic prefix ("HDFS") in the field name.
-
-See http://docs.djangoproject.com/en/1.2/topics/http/file-uploads/
-"""
-
+# coding=utf-8
 import errno
 import logging
 import time
@@ -49,37 +23,37 @@ class HDFSerror(Exception):
 
 class HDFStemporaryUploadedFile(object):
   """
-  A temporary HDFS file to store upload data.
-  This class does not have any file read methods.
+  暂存在HDFS的上传文件
   """
   def __init__(self, request, name, destination):
-    self.name = name
-    self.size = None
-    self._do_cleanup = False
+    self.name = name #文件名
+    self.size = None #文件大小
+    self._do_cleanup = False #是否需要清理
     try:
+      #中间间中设置的fs
       self._fs = request.fs
     except AttributeError:
+      #从集群中获得fs实例
       self._fs = utils.hadoop.cluster.get_hdfs()
 
-    # Don't want to handle this upload if we don't have an HDFS
+    #如果没有hdfs,则报错
     if not self._fs:
       raise HDFSerror("No HDFS found")
 
-    # We want to set the user to be the user doing the upload
+    #设置fs操作用户为超级用户
     self._fs.setuser(self._fs.superuser)
+    #设置临时文件的路径
     self._path = self._fs.mkswap(name, suffix='tmp', basedir=destination)
-
+    #若文件存在，则替换
     if self._fs.exists(self._path):
       self._fs._delete(self._path)
     self._file = self._fs.open(self._path, 'w')
-
+    #设置为需要清理
     self._do_cleanup = True
 
   def __del__(self):
     if self._do_cleanup:
-      # Do not do cleanup here. It's hopeless. The self._fs threadlocal states
-      # are going to be all wrong.
-      LOG.error("Left-over upload file is not cleaned up: %s" % (self._path,))
+      LOG.error("Upload file is not cleaned up: %s" % (self._path,))
 
   def get_temp_path(self):
     return self._path
@@ -94,7 +68,9 @@ class HDFStemporaryUploadedFile(object):
 
   def remove(self):
     try:
+      # 删除文件
       self._fs.remove(self._path, True)
+      # 设置清理完毕
       self._do_cleanup = False
     except IOError, ex:
       if ex.errno != errno.ENOENT:
@@ -112,33 +88,22 @@ class HDFStemporaryUploadedFile(object):
 
 
 class HDFSfileUploadHandler(FileUploadHandler):
-  """
-  Handle file upload by storing data in a temp HDFS file.
 
-  This handler is triggered by any upload field whose name starts with
-  "HDFS" (case insensitive).
-
-  In practice, the middlewares (which access the request.REQUEST/POST/FILES objects) triggers
-  the upload before reaching the view in case of permissions error. Read about Django
-  uploading documentation.
-
-  This might trigger the upload before executing the hue auth middleware. HDFS destination
-  permissions will be doing the checks.
-  """
   def __init__(self, request):
     FileUploadHandler.__init__(self, request)
-    self._file = None
-    self._starttime = 0
-    self._activated = False
-    self._destination = request.GET.get('dest', None) # GET param avoids infinite looping
+    self._file = None #文件
+    self._starttime = 0 #上传时间
+    self._activated = False #是否开始
+    self._destination = request.GET.get('dest', None) # 目标位置
     self.request = request
-    # Need to directly modify FileUploadHandler.chunk_size
+    #设置上传块大小
     FileUploadHandler.chunk_size = UPLOAD_CHUNK_SIZE.get()
 
   def new_file(self, field_name, file_name, *args, **kwargs):
-    # Detect "HDFS" in the field name.
+    # 检测以"FIlE"打头的前缀
     if field_name.upper().startswith('FILE'):
       try:
+        # 初始化文件
         self._file = HDFStemporaryUploadedFile(self.request, file_name, self._destination)
         LOG.debug('Upload attempt to %s' % (self._file.get_temp_path(),))
         self._activated = True
@@ -146,7 +111,7 @@ class HDFSfileUploadHandler(FileUploadHandler):
       except Exception, ex:
         LOG.error("Not using HDFS upload handler: %s" % (ex,))
         self.request.META['upload_failed'] = ex
-
+      #停止上传
       raise StopFutureHandlers()
 
   def receive_data_chunk(self, raw_data, start):
@@ -156,6 +121,7 @@ class HDFSfileUploadHandler(FileUploadHandler):
       return raw_data
 
     try:
+      # 写文件
       self._file.write(raw_data)
       self._file.flush()
       return None
@@ -169,12 +135,13 @@ class HDFSfileUploadHandler(FileUploadHandler):
       return None
 
     try:
+      # 结束上传
       self._file.finish_upload(file_size)
     except IOError:
       LOG.exception('Error closing uploaded temporary file "%s"' %
                     (self._file.get_temp_path(),))
       raise
-
+    # 总耗时
     elapsed = time.time() - self._starttime
     LOG.debug('Uploaded %s bytes to HDFS in %s seconds' % (file_size, elapsed))
     return self._file
