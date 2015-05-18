@@ -51,7 +51,7 @@ ${ commonheader(user) | n,unicode }
         </table>
 
 
-        <div class="pull-left" style="margin:20px 0;">
+        <div class="pull-left" style="margin:20px 0;" data-bind="css : {'hidden' : breadcrumbs().length <=1 }">
             <button type="button" class="btn btn-primary" data-bind="enable : selectedFiles().length == 1 && !selectedFile().isdir, click: downloadFile">Download</button>
             <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" data-bind="enable : selectedFiles().length > 0, click: deleteSelected">Delete</button>
         </div>

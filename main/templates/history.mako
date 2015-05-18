@@ -150,7 +150,7 @@ ${ commonheader(user) | n,unicode }
                 location.hash += ("!!" + self.query());
             }
 
-            $.getJSON('/profile/history',{
+            $.getJSON('/history',{
                 format:'json',
                 pagesize: self.targetPageSize(),
                 pageNum: self.targetPageNum(),
