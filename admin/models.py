@@ -381,7 +381,7 @@ def clear_file_info(request, path):
 
         # 添加用户日志
         msg = 'file delete'
-        get_profile(request.user).userlog_deletion(request, file, msg)
+        get_profile(request.user).userlog_deletion(file, msg)
         
         # 删除文件信息
         file.delete()
@@ -413,10 +413,10 @@ def ensure_new_fileinfo(path, request, is_dir=True):
         perm.save()
         perm.groups.add(request.group)
         perm.save()
-        
+
         # 添加用户日志
         msg = 'file add'
-        get_profile(request.user).userlog_addition(request, file, msg)
+        get_profile(request.user).userlog_addition(file, msg)
     except Exception as e:
         LOG.error("user %s of group %s: file info create failed!: %s" % (request.user, request.group, e)) 
         transaction.rollback()
@@ -611,7 +611,6 @@ def ensuire_table_info(user, tablename, group, action):
             LOG.info('user %s of group %s: table %s  info created!' % (user.username, group.name, tablename))
         except Exception as e:
             LOG.error("user %s of group %s: table info create failed!: %s" % (user.username, group.name, e)) 
-            print e
             transaction.rollback()
         else:
             transaction.commit()

@@ -93,8 +93,13 @@ def listdir_paged(request, proj_slug, role_slug, path):
         page = paginator.Paginator(dir_list, pagesize).page(pagenum)
 
         shown_stats = page.object_list
+        files = []
 
-        files = [ _massage_stats(request, s, project_home) for s in shown_stats ]
+        for s in shown_stats:
+            msg = _massage_stats(request, s, project_home)
+            if msg:
+                files.append(msg)
+
         page = _massage_page(page)
         proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
         data = \
@@ -149,6 +154,7 @@ def _massage_stats(request, stats, cur_path):
         owner = file.owner.username
     except FileInfo.DoesNotExist:
         Log.warn("Can't find file info of File %s" % path)
+        return None
 
     return {
         'name': stats['name'],
@@ -219,7 +225,7 @@ def upload_file(request, proj_slug, role_slug) :
                 return HttpResponseRedirect(next)
         except Exception, ex:
             response['data'] = str(ex)
-            Log.error('file upload fail')  # 需要更详细的描述
+            Log.error('file upload fail', exc_info=True)  # 需要更详细的描述
             hdfs_file = request.FILES.get('hdfs_file')
             if hdfs_file:
                 hdfs_file.remove()
@@ -512,7 +518,7 @@ def download(request, proj_slug, role_slug, path):
     proj_home, hadoop_path = get_hadoop_path(request, path)
     file = FileInfo.objects.filter(path=hadoop_path).first()
 
-    if not request.fs.exists(hadoop_path) and file:
+    if not request.fs.exists(hadoop_path) or not file:
         raise Http404(_("File not found: %(path)s.") % {'path': escape(hadoop_path)})
     if not request.fs.isfile(hadoop_path):
         raise PopupException(_("'%(path)s' is not a file.") % {'path': hadoop_path})
