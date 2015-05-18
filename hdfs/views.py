@@ -510,7 +510,7 @@ def download(request, proj_slug, role_slug, path):
     """
     path = Hdfs.normpath(path)
     proj_home, hadoop_path = get_hadoop_path(request, path)
-    file = FileInfo.objects.filter(path=hadoop_path).first()
+    file = FileInfo.objects.filter(path=hadoop_path),first()
 
     if not request.fs.exists(hadoop_path) and file:
         raise Http404(_("File not found: %(path)s.") % {'path': escape(hadoop_path)})
