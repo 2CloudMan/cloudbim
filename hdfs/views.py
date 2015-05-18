@@ -154,7 +154,6 @@ def _massage_stats(request, stats, cur_path):
         owner = file.owner.username
     except FileInfo.DoesNotExist:
         Log.warn("Can't find file info of File %s" % path)
-        return None
 
     return {
         'name': stats['name'],
@@ -518,6 +517,8 @@ def download(request, proj_slug, role_slug, path):
     proj_home, hadoop_path = get_hadoop_path(request, path)
     file = FileInfo.objects.filter(path=hadoop_path).first()
 
+    if not file:
+        raise PopupException(_("system file can't be downloaded") % {'path': hadoop_path})
     if not request.fs.exists(hadoop_path) or not file:
         raise Http404(_("File not found: %(path)s.") % {'path': escape(hadoop_path)})
     if not request.fs.isfile(hadoop_path):
