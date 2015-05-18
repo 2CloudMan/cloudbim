@@ -61,6 +61,8 @@ def show(request, proj_slug, role_slug) :
 def info(request, proj_slug, role_slug) :
 
     proj_info, roles_info = get_user_proj_roles_info(request.user, request.group.groupprofile.project)
+
+
     return render('info.mako', request, {
         'curr_proj': proj_slug,
         'curr_role': role_slug,

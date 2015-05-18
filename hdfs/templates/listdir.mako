@@ -21,12 +21,19 @@ ${ commonheader(user) | n,unicode }
                             <li data-bind="visible: label != '/'"><a href="" data-bind="text: label, click: show"></a><span class="divider">/</span></li>
                         </ul>
                     </li>
-                    <li class="pull-right">
+                    <li class="pull-right" data-bind="css: {'hidden': breadcrumbs().length <= 1}">
                         <a href="#uploadFileModal" role="button" data-toggle="modal">AddFile</a>
                     </li>
-                    <li class="pull-right">
+                    <li class="pull-right" data-bind="css: {'hidden': breadcrumbs().length <= 1}">
                         <a href="#createDirModal" role="button" data-toggle="modal">CreateDir</a>
                     </li>
+
+                    <li class="pull-right">
+                        <div class="input-append">
+                          <input class="span2" id="appendedInputButton" type="text">
+                          <button class="btn" type="button" style="margin-top:-1!important"><span class="fa fa-search"></span></button>
+                        </div>
+                    <li>
                 </ul>
 
         </div>
