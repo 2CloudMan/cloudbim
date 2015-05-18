@@ -214,6 +214,7 @@ class UserProfile(models.Model):
             log = log.filter(object_repr__contains=query)
 
         type = ContentType.objects.filter(model=type).first()
+
         if not type:
             return []
         log = log.filter(content_type_id=type.id)

@@ -132,7 +132,7 @@ ${ commonheader(user) | n,unicode }
         self.page = ko.observable(new Page(page));
         self.targetPageNum = ko.observable(1);
         self.targetPageSize = ko.observable(30);
-        self.targetType = ko.observable('file')
+        self.targetType = ko.observable('fileinfo')
         self.query = ko.observable('');
 
         self.resumeDefault = function() {
@@ -154,6 +154,7 @@ ${ commonheader(user) | n,unicode }
                 format:'json',
                 pagesize: self.targetPageSize(),
                 pageNum: self.targetPageNum(),
+                type: self.targetType(),
                 query :self.query(),
             },
             function(data){
@@ -223,7 +224,7 @@ ${ commonheader(user) | n,unicode }
 
             if (viewModal) {
                 viewModal.resumeDefault();
-                viewModal.targetType('file');
+                viewModal.targetType('fileinfo');
                 viewModal.retrieveData();
             }
 
@@ -237,7 +238,7 @@ ${ commonheader(user) | n,unicode }
 
             if (viewModal) {
                 viewModal.resumeDefault();
-                viewModal.targetType('db');
+                viewModal.targetType('tableinfo');
                 viewModal.retrieveData();
 
             }
