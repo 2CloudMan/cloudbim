@@ -1,5 +1,5 @@
 <%!
-from utils.views import commonheader, commonfooter
+from utils.views import commonheader, commonfooter, subheader
 %>
 
 <%namespace name="sub" file="sub_header.mako"/>
@@ -9,7 +9,7 @@ ${ commonheader(user) | n,unicode }
 <div class="container">
 
 <div>
-   ${ sub.showSubMenu(project, curr_role, roles, 'tb')}
+   ${ subheader(project, curr_role, roles, 'tb') | n,unicode}
 </div>
 
 <link href="${ static('hbase/css/hbase.css') }" rel="stylesheet" type="text/css" />
@@ -475,3 +475,4 @@ canWrite = ${ str(can_write).lower() };
 
 </div>
 ${ commonfooter() | n,unicode }
+ 1

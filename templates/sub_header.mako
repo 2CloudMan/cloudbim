@@ -1,6 +1,7 @@
-<%def name="showSubMenu(curr_proj, curr_role, roleList, app)">
-
-    <script type="text/javascript" src="${ static('main/js/nav.js') }"></script>
+<%!
+from utils.lib.django_mako import static
+%>
+<script type="text/javascript" src="${ static('main/js/nav.js') }"></script>
     <div class="navbar sub-nav" ">
         <div class="container">
           <div class="navbar-inner">
@@ -13,7 +14,7 @@
                     % for role in roleList:
                     <li>
                     % if app == 'fb':
-                    <a href="/project/${curr_proj['slug']}/${role['slug']}/${app}/view">${role['name']}</a></li>
+                    <a href="/project/${curr_proj['slug']}/${role['slug']}/${app}/view">${role['name']}/</a></li>
                     % else:
                     <a href="/project/${curr_proj['slug']}/${role['slug']}/${app}">${role['name']}</a></li>
                     % endif
@@ -21,6 +22,11 @@
                   </ul>
               </div>
               <ul class="nav navbar-nav navbar-right">
+                <li
+                % if app == 'info':
+                class="active"
+                % endif
+                ><a href="/project/${curr_proj['name']}/${curr_role}/info">Info</a></li>
                 <li
                 % if app == 'fb':
                 class="active"
@@ -30,19 +36,9 @@
                 % if app == 'tb':
                 class="active"
                 % endif
-                ><a href="/project/${curr_proj['name']}/${curr_role}/tb">Table</a></li>
-                <li
-                % if app == 'log':
-                class="active"
-                % endif
-                ><a href="/project/${curr_proj['name']}/${curr_role}/log">Log</a></li>
-                <li
-                % if app == 'info':
-                class="active"
-                % endif
-                ><a href="/project/${curr_proj['name']}/${curr_role}/info">Detail</a></li>
+                ><a href="/project/${curr_proj['name']}/${curr_role}/tb">DataBase</a></li>
+
               </ul>
           </div>
         </div>
     </div>
-</%def>

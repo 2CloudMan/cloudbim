@@ -10,6 +10,14 @@ def commonheader(user) :
 def commonfooter() :
     return render_to_string('common_footer.mako', {})
 
+def subheader(curr_proj, curr_role, roleList, app) :
+    return render_to_string('sub_header.mako', {
+        'curr_proj':curr_proj,
+        'curr_role':curr_role,
+        'roleList': roleList,
+        'app': app
+    })
+
 
 
 def serve_404_error(request, *args, **kwargs):

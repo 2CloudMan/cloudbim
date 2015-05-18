@@ -46,9 +46,9 @@ INSTALLED_APPS = (
 
     'admin',
     'auth',
+    'main',
     'hbase',
     'hdfs',
-    'main',
 
 )
 
