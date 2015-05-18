@@ -8,11 +8,19 @@
             <li><a href="/profile">Profile</a></li>
             %endif
 
-            %if app == 'history':
-            <li class="active"><a href="/profile/history">History</a></li>
+            %if app == 'project':
+            <li class="active"><a href="/project">Project</a></li>
             %else:
-            <li><a href="/profile/history">History</a></li>
+            <li><a href="/project">Project</a></li>
             %endif
+
+            %if app == 'history':
+            <li class="active"><a href="/history">History</a></li>
+            %else:
+            <li><a href="/history">History</a></li>
+            %endif
+
+
         </ul>
     </div>
 </%def>

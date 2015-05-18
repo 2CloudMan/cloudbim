@@ -1,15 +1,13 @@
 <%!
-from utils.views import commonheader, commonfooter
+from utils.views import commonheader, commonfooter, subheader
 %>
-
-<%namespace name="sub" file="sub_header.mako"/>
 
 ${ commonheader(user) | n,unicode }
 
 <div class="container">
 
     <div>
-        ${ sub.showSubMenu(project, curr_role, roles, 'fb')}
+        ${ subheader(project, curr_role, roles, 'fb')| n,unicode}
     </div>
 
     <div class="card">

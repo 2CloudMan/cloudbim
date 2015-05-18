@@ -210,7 +210,7 @@ ${ commonheader(user) | n,unicode }
         }
     }
 
-    var viewModal = new LogModal([], null, 'file');
+    var viewModal = new LogModal([], null, 'fileinfo');
     ko.applyBindings(viewModal);
 
     $(document).ready(function(){
