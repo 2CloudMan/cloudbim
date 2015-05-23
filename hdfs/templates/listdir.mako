@@ -30,8 +30,8 @@ ${ commonheader(user) | n,unicode }
 
                     <li class="pull-right">
                         <div class="input-append">
-                          <input class="span2" id="appendedInputButton" type="text">
-                          <button class="btn" type="button" style="margin-top:-1!important"><span class="fa fa-search"></span></button>
+                          <input class="span2" id="appendedInputButton" type="text" data-bind="value: query">
+                          <button class="btn btn-search" type="button" style="margin-top:-1!important", data-bind="click: search"><span class="fa fa-search"></span></button>
                         </div>
                     <li>
                 </ul>
@@ -46,10 +46,11 @@ ${ commonheader(user) | n,unicode }
                     <td width="1%">
                     <i class="bimCheckbox" data-bind="click: selectAll, css: {'fa fa-check' : allSelected}"><i/>
                     </td>
+                    <td width="1%"></td>
                     <td><strong>Name</strong></td>
-                    <td><strong>Size</strong></td>
-                    <td><strong>Owner</strong></td>
-                    <td><strong>Date</strong></td>
+                    <td width="15%"><strong>Size</strong></td>
+                    <td width="15%"><strong>Owner</strong></td>
+                    <td width="20%"><strong>Date</strong></td>
                 </tr>
             </thead>
 
@@ -136,7 +137,7 @@ ${ commonheader(user) | n,unicode }
                     <label for="dirName">DirectoryName</label>
                     <input id="newDirNameInput" type="text" class="form-control"  name="dir_name" placeholder="">
                     <input type='hidden' class="hidden-field" name="dest" data-bind="value: currentDirPath()" />
-                    <button type="submit" class="btn btn-default">submit</button>
+                    <button style="margin-top:-10px!important" type="submit" class="btn btn-default">submit</button>
                   </form>
               </div>
               <div class="modal-footer">
@@ -257,15 +258,18 @@ ${ commonheader(user) | n,unicode }
     </script>
 
      <script id="fileTemplate" type="text/html">
-        <tr data-bind="click: $root.viewFile">
+        <tr data-bind="click: $root.viewFile, event:{mouseover: toggleHover, mouseout: toggleHover}, style:{cursor : isdir ? 'pointer' : 'default'}">
             <td data-bind="click: handleSelect">
                 <i class="bimCheckbox" data-bind="css: {'fa fa-check' : selected}"></i>
+            </td>
+            <td>
+                <i class="fa" style="margin-top:2px" data-bind="css: {'fa-folder' : isdir, 'fa-file': !isdir, 'fa-folder-open': isdir && hovered }"></i>
             </td>
             <td>
                 <span data-bind="text: name"></span>
             </td>
             <td>
-                <span data-bind="text: human_size"></span>
+                <span data-bind="text: human_size, css: {'invisible' : isdir}"></span>
             </td>
              <td>
                 <span data-bind="text: owner"></span>
@@ -301,6 +305,11 @@ ${ commonheader(user) | n,unicode }
               e.stopPropagation();
               this.selected(! this.selected());
               viewModel.allSelected(false);
+            },
+            hovered: ko.observable(false),
+            hovered: ko.observable(false),
+            toggleHover: function (row, e) {
+              this.hovered(! this.hovered());
             }
         };
       }
@@ -344,6 +353,7 @@ ${ commonheader(user) | n,unicode }
         self.targetPageNum = ko.observable(1);
         self.basePath = "/project/${curr_proj}/${curr_role}/fb/";
         self.targetPath = ko.observable(self.basePath + 'view${path}')
+        self.query = ko.observable('');
 
         self.files = ko.observableArray(ko.utils.arrayMap(files, function(file){
             new File(file);
@@ -389,7 +399,6 @@ ${ commonheader(user) | n,unicode }
 
         }
 
-
         self.updateFileList = function (files, page, breadcrumbs, currentDirPath) {
             //$(".tooltip").hide();
 
@@ -424,12 +433,19 @@ ${ commonheader(user) | n,unicode }
         self.retrieveData = function () {
             self.isLoading(true);
 
-            $.getJSON(self.targetPath() + "?pagesize=" + self.recordsPerPage() + "&pagenum=" + self.targetPageNum() + "&format=json", function (data) {
+            $.getJSON(self.targetPath(), {
+                pagesize: self.recordsPerPage(),
+                pagenum: self.targetPageNum(),
+                format: 'json',
+                query: self.query()
+            }, function (data) {
               if (data.error){
                 $(document).trigger("error", data.error);
                 self.isLoading(false);
                 return false;
               }
+
+              console.log(data);
 
               if (data.type != null && data.type == "file") {
                 location.href = data.url;
@@ -447,6 +463,13 @@ ${ commonheader(user) | n,unicode }
 
             return true;
 
+        }
+
+        self.search = function() {
+            var queryStr = self.query().trim();
+            if(queryStr != ''){
+                self.retrieveData();
+            }
         }
 
         self.viewFile = function (file) {
@@ -548,6 +571,10 @@ ${ commonheader(user) | n,unicode }
         $("#uploadFileModal").on('hide', function(){
             //console.log('Refresh');
             //location.href=/project/${curr_proj}/${curr_role}/fb/view${path};
+        });
+
+        $(".btn-search").on('click', function(event){
+            this.blur();
         });
       });
 
