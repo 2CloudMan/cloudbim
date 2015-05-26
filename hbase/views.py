@@ -33,7 +33,7 @@ from hbase.settings import DJANGO_APPS
 from hbase.api import HbaseApi
 from server.hbase_lib import get_thrift_type
 from admin.models import ensuire_table_info, get_profile, clear_table_info,\
-        get_user_proj_roles_info
+        get_user_proj_roles_info, TableInfo
 
 LOG = logging.getLogger(__name__)
 
@@ -109,19 +109,27 @@ def api_router(request, proj_slug, role_slug, url): # On split, deserialize anyt
 
   # create table info when call method createTable
   if settings.NEED_PERMISSION:
-      result = result_deal(request, result, tablename, action)
+      try:
+        result = result_deal(request, result, tablename, action, url_params)
+      except Exception as ex:
+          LOG.error('result_deal failed', exc_info=True)
   return api_dump(result)
 
 
-def result_deal(request, result, tablename, action):
+def result_deal(request, result, tablename, action, url_params):
   if action == 'createTable':
     ensuire_table_info(request.user, tablename, request.group, action)
   elif action == 'deleteTable':
-    clear_table_info(tablename)
+    clear_table_info(tablename, request.user)
   elif action == 'getTableList':
     perms = request.group.bimhbasepermission_set.all()
     tables = [perm.table.table for perm in perms]
     result = [item  for item in result if (item.get('name') in tables)]
+  else:
+    tables = TableInfo.objects.filter(table=tablename)
+    if tables and (action.startswith('put') or \
+            action.startswith('delete')):
+        get_profile(request.user).userlog_change(tables.first(), action+ json.dumps(url_params[3:]))
   return result
 
 
