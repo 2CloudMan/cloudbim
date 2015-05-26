@@ -70,6 +70,8 @@ def listdir_paged(request, proj_slug, role_slug, path):
     }
     """
 
+    query = request.GET.get('query', '')
+
     if not request.user.is_authenticated():
         return HttpResponseRedirect('/auth/login')
     project_home, hadoop_path = get_hadoop_path(request, path)
@@ -97,7 +99,7 @@ def listdir_paged(request, proj_slug, role_slug, path):
 
         for s in shown_stats:
             msg = _massage_stats(request, s, project_home)
-            if msg:
+            if msg and msg['name'].find(query) != -1:
                 files.append(msg)
 
         page = _massage_page(page)

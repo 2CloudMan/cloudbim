@@ -14,6 +14,9 @@ ${ commonheader(user) | n,unicode }
 
     <div class="card">
         <div class="container">
+            <div class="card-heading">
+                <h4>Project Info</h4>
+            </div>
 
         </div>
     </div>
