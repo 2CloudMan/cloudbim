@@ -214,7 +214,7 @@ ${ commonheader(user) | n,unicode }
     <div class="subnav sticky">
       <div class="container-fluid">
         <div class="row-fluid">
-          <div id="searchbar-main" class="span5 hidden" data-bind="click: search.clickTagBar">
+          <div id="searchbar-main" class="span5" data-bind="click: search.clickTagBar">
             <a class="search-remove" data-bind="visible: search.cur_input() != '', click: function(){ app.search.cur_input(''); app.search.focused(true) }"><i class="fa fa-times-circle"></i></a>
             <div id="search-tags" contenteditable="true" data-bind="editableText: search.cur_input, hasfocus: search.focused, css: { 'active': search.cur_input() != '' }, event: { 'keydown': search.onKeyDown, click: search.updateMenu.bind(null) }" data-placeholder="${_('row_key, row_prefix* +scan_len [col1, family:col2, fam3:, col_prefix* +3, fam: col2 to col3] {Filter1() AND Filter2()}')}">
             </div>
@@ -231,7 +231,7 @@ ${ commonheader(user) | n,unicode }
             <li class="search-suggestion" data-bind="event: { mousedown: app.search.replaceFocusNode.bind(null, $data) }, css: {active: app.search.activeSuggestion() == $index()}"><a><span data-bind="text: $data"></span></a></li>
             <!-- /ko -->
           </ul>
-          <button class="btn btn-primary add-on hidden" data-bind="enabled: !search.submitted(), click: search.evaluate.bind(null)"><i class="fa fa-search"></i></button>
+          <button class="btn btn-primary add-on" data-bind="enabled: !search.submitted(), click: search.evaluate.bind(null)"><i class="fa fa-search"></i></button>
           <span id="column-family-selectors">
             <!-- ko foreach: views.tabledata.columnFamilies() -->
               <span class="label" data-bind="text: $data.name, style: {'backgroundColor': ($data.enabled()) ? stringHashColor($data.name.split(':')[0]) : '#ccc' ,'cursor':'pointer'}, click: $data.toggle"></span>
