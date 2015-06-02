@@ -579,13 +579,17 @@ def ensure_proj_role_directory(fs, project, role):
 
 # clear table info 
 @transaction.commit_manually
-def clear_table_info(tablename):
+def clear_table_info(tablename, user):
     try:
         # 删除相关权限
         BimHbasePermission.objects.filter(table__table=tablename).delete()
         
         # 删除相关表格信息
-        TableInfo.objects.filter(table=tablename).delete()
+        tables = TableInfo.objects.filter(table=tablename)
+        if tables:
+            msg = 'table %s delete' % tablename
+            get_profile(user).userlog_deletion(tables.first(), msg)
+        tables.delete()
     except Exception as e:
         LOG.error("Table info clear failed! ", exc_info=e) 
         transaction.rollback()
@@ -608,6 +612,7 @@ def ensuire_table_info(user, tablename, group, action):
 
             perm.groups.add(group)
             perm.save()
+            get_profile(user).userlog_addition(table, 'table %s create' % tablename) 
             LOG.info('user %s of group %s: table %s  info created!' % (user.username, group.name, tablename))
         except Exception as e:
             LOG.error("user %s of group %s: table info create failed!: %s" % (user.username, group.name, e)) 
