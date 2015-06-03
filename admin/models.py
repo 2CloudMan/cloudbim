@@ -428,9 +428,9 @@ def get_group_table_permission(group, table):
     if not group or not table:
         return ''
     
-    perm = BimHbasePermission.objects.filter(table__table=table)
+    perms = BimHbasePermission.objects.filter(table__table=table)
     
-    if perm:
+    for perm in perms:
         if perm.groups.filter(name=group.name).exists():
             return perm.action
     return ''
@@ -440,11 +440,13 @@ def group_has_table_permission(group, table, perm):
     if not group or not table or not perm:
         return False
 
-    perm = BimHbasePermission.objects.filter(table__table=table,
-                                           action__contains=perm).first()
+    perms = BimHbasePermission.objects.filter(table__table=table,
+                                           action__contains=perm)
       
-    if perm:
-        return perm.groups.filter(name=group.name).exists()
+    for perm in perms:
+        if perm.groups.filter(name=group.name).exists():
+            return True
+
     return False
 
 

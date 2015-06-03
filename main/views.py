@@ -108,6 +108,7 @@ def history(request) :
         user_logs = get_profile(request.user).get_userlog(query, type)
         records = [dict(op=log.change_message ,time=log.action_time.strftime('%Y-%m-%d %H:%M:%S'),
                          target=log.object_repr) for log in user_logs]
+        records.reverse()
 
         page = paginator.Paginator(records, pagesize).page(pagenum)
         page = _massage_page(page)
